@@ -1,0 +1,1 @@
+"""Modular backend structure for expense tracker functionality."""
