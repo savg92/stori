@@ -214,3 +214,13 @@ coverage/
 mock_data/
 test_data/
 debug/
+
+# Ignore pdr, plan, frontend and backend agent and any other resume md files
+*.PRD.md
+*.Plan.md
+*.AGENTS.md
+*.resume.md
+*.backend_agent.md
+*.frontend_agent.md
+frontend/agent/
+backend/agent/ 

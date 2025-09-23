@@ -90,8 +90,7 @@ docker-compose logs -f backend
 ### Required Environment Variables
 
 - `SUPABASE_URL`: Your Supabase project URL
-- `SUPABASE_ANON_KEY`: Supabase anonymous key
-- `SUPABASE_SERVICE_ROLE_KEY`: Supabase service role key
+- `SUPABASE_PUBLISHABLE_KEY`: Supabase publishable key
 
 ### AI Configuration (Optional)
 

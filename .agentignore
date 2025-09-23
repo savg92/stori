@@ -22,7 +22,7 @@
 
 # Environment and secrets
 **/.env*
-!**/.env.example
+/* !**/.env.example */
 **/secrets.*
 **/config/local.*
 

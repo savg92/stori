@@ -29,7 +29,7 @@ class Settings:
         
         # Supabase settings for database and auth
         self.supabase_url = os.getenv("SUPABASE_URL")
-        self.supabase_key = os.getenv("SUPABASE_ANON_KEY")
+        self.supabase_key = os.getenv("SUPABASE_PUBLISHABLE_KEY") or os.getenv("SUPABASE_ANON_KEY")  # Support both naming conventions
         self.supabase_service_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
         
         # JWT settings for authentication
