@@ -34,6 +34,14 @@ const COLORS = [
 	'#FF7C7C',
 ];
 
+// Format category names for display
+const formatCategoryName = (category: string): string => {
+	return category
+		.split('_')
+		.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+		.join(' ');
+};
+
 interface ChartDataItem {
 	name: string;
 	value: number;
@@ -78,7 +86,7 @@ export function ExpenseChart() {
 		);
 
 		return expenseData.expense_categories.map((category, index: number) => ({
-			name: category.category,
+			name: formatCategoryName(category.category),
 			value: category.total_amount,
 			amount: category.total_amount,
 			percentage: total > 0 ? (category.total_amount / total) * 100 : 0,

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAIChat } from '@/hooks/useApi';
-import { Loader2, Send, Bot, User } from 'lucide-react';
+import { Loader2, Send, Bot, User, Lightbulb } from 'lucide-react';
 
 interface Message {
 	id: string;
@@ -24,8 +24,21 @@ export function AIChat() {
 		},
 	]);
 	const [inputMessage, setInputMessage] = useState('');
+	const [showSuggestions, setShowSuggestions] = useState(true);
 
 	const { mutate: sendMessage, isPending } = useAIChat();
+
+	const suggestedPrompts = [
+		'How can I reduce my monthly expenses?',
+		"What's my biggest spending category?",
+		'Am I saving enough money each month?',
+		'Show me my spending trends',
+	];
+
+	const handleSuggestedPrompt = (prompt: string) => {
+		setInputMessage(prompt);
+		setShowSuggestions(false);
+	};
 
 	const handleSendMessage = () => {
 		if (!inputMessage.trim() || isPending) return;
@@ -141,6 +154,29 @@ export function AIChat() {
 						)}
 					</div>
 				</ScrollArea>
+
+				{/* Suggested prompts */}
+				{showSuggestions && messages.length === 1 && (
+					<div className='space-y-2'>
+						<div className='flex items-center space-x-2 text-sm text-muted-foreground'>
+							<Lightbulb className='h-4 w-4' />
+							<span>Try asking:</span>
+						</div>
+						<div className='grid grid-cols-1 sm:grid-cols-2 gap-2'>
+							{suggestedPrompts.map((prompt, index) => (
+								<Button
+									key={index}
+									variant='outline'
+									size='sm'
+									className='text-left justify-start h-auto py-2 px-3 text-xs'
+									onClick={() => handleSuggestedPrompt(prompt)}
+								>
+									{prompt}
+								</Button>
+							))}
+						</div>
+					</div>
+				)}
 
 				<div className='flex space-x-2'>
 					<Input

@@ -21,7 +21,7 @@ from .schemas import (
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/expenses", tags=["expenses"])
+router = APIRouter(prefix="/expenses", tags=["expenses"])
 
 
 def get_expense_service(

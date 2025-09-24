@@ -5,14 +5,18 @@ Creates schema and populates with mock data in one step.
 """
 
 import asyncio
+import os
 import logging
 from datetime import datetime
 from typing import List
+from dotenv import load_dotenv
 
 from supabase import create_client, Client
-from config.settings import get_settings
 from services.mock_data_service import MockDataService
 from core.models import UserProfile, Transaction
+
+# Load environment variables
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -24,12 +28,21 @@ class DatabaseSetup:
     
     def __init__(self):
         """Initialize database setup."""
-        settings = get_settings()
+        # Get environment variables
+        supabase_url = os.getenv("SUPABASE_URL", "http://127.0.0.1:54321")
+        
+        # Use service role key for data seeding to bypass RLS
+        # For local development, this is the default service role key
+        service_role_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+        
         self.supabase: Client = create_client(
-            supabase_url=settings.supabase_url,
-            supabase_key=settings.supabase_key
+            supabase_url=supabase_url,
+            supabase_key=service_role_key  # Use service role instead of anon key
         )
         self.mock_service = MockDataService()
+        
+        logger.info(f"🔧 Using Supabase URL: {supabase_url}")
+        logger.info("🔑 Using SERVICE ROLE key for data seeding (bypasses RLS)")
 
     def create_schema(self) -> bool:
         """Create the database schema using SQL commands."""

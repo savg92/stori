@@ -22,7 +22,7 @@ from .schemas import (
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/timeline", tags=["timeline"])
+router = APIRouter(prefix="/timeline", tags=["timeline"])
 
 
 def get_timeline_service(

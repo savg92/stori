@@ -193,3 +193,49 @@ class TransactionsService:
         existing = await self.repository.get_transaction_by_id(user_id, transaction_id)
         if not existing:
             raise ValueError(f"Transaction {transaction_id} not found")
+    
+    def _get_mock_transactions_paginated(
+        self, 
+        user_id: str, 
+        query: TransactionQuery
+    ) -> TransactionListResponse:
+        """Get paginated mock transactions."""
+        # Get all mock transactions for the user
+        all_transactions = self.mock_service.get_mock_transactions(user_id)
+        
+        # Apply filtering
+        filtered_transactions = []
+        for tx in all_transactions:
+            # Date range filtering
+            if query.start_date and tx.transaction_date < query.start_date:
+                continue
+            if query.end_date and tx.transaction_date > query.end_date:
+                continue
+            
+            # Category filtering
+            if query.category and tx.category != query.category:
+                continue
+            
+            # Type filtering
+            if query.transaction_type and tx.type != query.transaction_type:
+                continue
+            
+            filtered_transactions.append(tx)
+        
+        # Sort by date (newest first)
+        filtered_transactions.sort(key=lambda x: x.transaction_date, reverse=True)
+        
+        # Apply pagination
+        total_count = len(filtered_transactions)
+        start_idx = query.offset
+        end_idx = start_idx + query.limit
+        paginated_transactions = filtered_transactions[start_idx:end_idx]
+        
+        # Calculate pagination metadata
+        has_more = len(paginated_transactions) == query.limit
+        
+        return TransactionListResponse(
+            transactions=paginated_transactions,
+            total_count=total_count,
+            has_more=has_more
+        )

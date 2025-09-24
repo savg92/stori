@@ -3,6 +3,8 @@ import { DashboardLayout } from '../layout/DashboardLayout';
 import { DashboardOverview } from '../dashboard/DashboardOverview';
 import { TransactionList } from '../transactions/TransactionList';
 import { AIChatPage } from '../../pages/AIChatPage';
+import { APIDataTest } from '../debug/APIDataTest';
+import { MobileTestPage } from '../debug/MobileTestPage';
 
 // Placeholder components for future implementation
 function AnalyticsPage() {
@@ -47,6 +49,14 @@ export function AppRouter() {
 					<Route
 						path='/ai'
 						element={<AIChatPage />}
+					/>
+					<Route
+						path='/debug'
+						element={<APIDataTest />}
+					/>
+					<Route
+						path='/mobile-test'
+						element={<MobileTestPage />}
 					/>
 					<Route
 						path='/settings'

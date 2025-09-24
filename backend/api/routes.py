@@ -13,6 +13,7 @@ from src.modules.transactions.transactions_controller import router as transacti
 from src.modules.expenses.controller import router as expenses_router
 from src.modules.timeline.controller import router as timeline_router
 from src.modules.ai.controller import router as ai_router
+from src.modules.auth.controller import router as auth_router
 from api.mock_routes import router as mock_router
 
 logger = logging.getLogger(__name__)
@@ -22,14 +23,6 @@ router = APIRouter()
 
 # Security scheme
 security = HTTPBearer()
-
-# Include all module routers
-router.include_router(transactions_router)
-router.include_router(expenses_router)
-router.include_router(timeline_router)
-router.include_router(ai_router)
-router.include_router(mock_router)
-
 
 async def get_current_user(token: str = Depends(security)) -> Dict:
     """Extract user information from JWT token."""
@@ -54,9 +47,18 @@ async def health_check():
         "status": "healthy",
         "version": "1.0.0",
         "modules": [
+            "auth",
             "transactions",
             "expenses", 
             "timeline",
-            "ai"
+            "ai",
         ]
     }
+
+# Include all module routers
+router.include_router(auth_router)
+router.include_router(transactions_router)
+router.include_router(expenses_router)
+router.include_router(timeline_router)
+router.include_router(ai_router)
+router.include_router(mock_router)

@@ -35,8 +35,8 @@ class AuthMiddleware:
     async def verify_token(self, token: str) -> Dict[str, Any]:
         """Verify and decode JWT token."""
         try:
-            # Verify token with Supabase
-            response = await self._supabase.auth.get_user(token)
+            # Set the token for the client and get user
+            response = self._supabase.auth.get_user(token)
             
             if not response.user:
                 raise AuthenticationError("Invalid token")

@@ -28,9 +28,19 @@ class Settings:
         ]
         
         # Supabase settings for database and auth
-        self.supabase_url = os.getenv("SUPABASE_URL")
-        self.supabase_key = os.getenv("SUPABASE_PUBLISHABLE_KEY") or os.getenv("SUPABASE_ANON_KEY")  # Support both naming conventions
-        self.supabase_service_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+        # Support both local development and hosted environments
+        self.use_local_supabase = os.getenv("USE_LOCAL_SUPABASE", "false").lower() == "true"
+        
+        if self.use_local_supabase:
+            # Local Supabase development settings
+            self.supabase_url = os.getenv("SUPABASE_LOCAL_URL", "http://127.0.0.1:54321")
+            self.supabase_key = os.getenv("SUPABASE_LOCAL_ANON_KEY", "sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH")
+            self.supabase_service_key = os.getenv("SUPABASE_LOCAL_SERVICE_KEY", "sb_secret_N7UND0UgjKTVK-Uodkm0Hg_xSvEMPvz")
+        else:
+            # Hosted Supabase settings
+            self.supabase_url = os.getenv("SUPABASE_URL")
+            self.supabase_key = os.getenv("SUPABASE_PUBLISHABLE_KEY") or os.getenv("SUPABASE_ANON_KEY")  # Support both naming conventions
+            self.supabase_service_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
         
         # JWT settings for authentication
         self.jwt_secret = os.getenv("JWT_SECRET_KEY", "your-secret-key-change-in-production")

@@ -27,7 +27,7 @@ async def lifespan(app: FastAPI):
         
         # Test database connection
         try:
-            health = await supabase.health_check()
+            health = supabase.health_check()
             if health["status"] == "healthy":
                 logging.info("✅ Supabase connection established successfully")
             else:
@@ -94,5 +94,5 @@ if __name__ == "__main__":
         "main:app",
         host=settings.host,
         port=settings.port,
-        reload=False  # Disable reload for testing
+        reload=True
     )

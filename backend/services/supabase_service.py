@@ -47,11 +47,11 @@ class SupabaseClient:
             logger.error(f"Failed to initialize Supabase client: {e}")
             raise
     
-    async def health_check(self) -> Dict[str, Any]:
+    def health_check(self) -> Dict[str, Any]:
         """Check Supabase connection health."""
         try:
             # Simple query to test connection
-            response = await self.client.table('users').select('count').execute()
+            response = self.client.table('users').select('count').execute()
             return {
                 "status": "healthy",
                 "connection": "active",

@@ -14,7 +14,6 @@ from .schemas import (
     ExpenseSummaryResponse,
     ExpenseTrendResponse
 )
-from services.mock_data_service import get_mock_data_service
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +23,6 @@ class ExpenseService:
     
     def __init__(self, repository: ExpenseRepository):
         self.repository = repository
-        self.mock_service = get_mock_data_service()
     
     async def get_expense_summary(
         self, 
@@ -47,11 +45,6 @@ class ExpenseService:
                 
                 filters.start_date = filters.start_date or start_date
                 filters.end_date = filters.end_date or end_date
-            
-            # Check if this is a mock user - if so, use mock data
-            if self.mock_service.is_mock_user(user_id):
-                logger.info(f"Using mock data for expense summary for user {user_id}")
-                return self._get_mock_expense_summary(user_id, filters)
             
             summary_data = await self.repository.get_expense_summary(user_id, filters)
             
@@ -213,77 +206,3 @@ class ExpenseService:
             logger.error(f"Error in monthly comparison service: {e}")
             raise
     
-    def _get_mock_expense_summary(
-        self, 
-        user_id: str, 
-        filters: ExpenseFilters
-    ) -> ExpenseSummaryResponse:
-        """Get expense summary from mock data."""
-        # Get all mock transactions for the user
-        all_transactions = self.mock_service.get_mock_transactions(user_id)
-        
-        # Filter to expenses only and apply date range
-        expense_transactions = []
-        for tx in all_transactions:
-            if tx.type != "expense":
-                continue
-            
-            # Date filtering
-            if filters.start_date and tx.transaction_date < filters.start_date:
-                continue
-            if filters.end_date and tx.transaction_date > filters.end_date:
-                continue
-            
-            # Category filtering (if specified)
-            if filters.category and tx.category != filters.category:
-                continue
-            
-            expense_transactions.append(tx)
-        
-        # Calculate summary statistics
-        total_expenses = sum(abs(tx.amount) for tx in expense_transactions)  # abs for display
-        total_count = len(expense_transactions)
-        avg_expense = total_expenses / total_count if total_count > 0 else Decimal('0')
-        
-        # Calculate category breakdown
-        category_totals = {}
-        category_counts = {}
-        
-        for tx in expense_transactions:
-            category = tx.category
-            amount = abs(tx.amount)
-            
-            if category not in category_totals:
-                category_totals[category] = Decimal('0')
-                category_counts[category] = 0
-            
-            category_totals[category] += amount
-            category_counts[category] += 1
-        
-        # Build category breakdown with percentages
-        category_breakdown = []
-        for category, total_amount in category_totals.items():
-            count = category_counts[category]
-            percentage = float(total_amount / total_expenses * 100) if total_expenses > 0 else 0
-            avg_amount = total_amount / count if count > 0 else Decimal('0')
-            
-            category_breakdown.append(CategorySummaryResponse(
-                category=category,
-                total_amount=total_amount,
-                transaction_count=count,
-                percentage=percentage,
-                average_amount=avg_amount
-            ))
-        
-        # Sort by total amount (highest first)
-        category_breakdown.sort(key=lambda x: x.total_amount, reverse=True)
-        
-        return ExpenseSummaryResponse(
-            total_expenses=total_expenses,
-            transaction_count=total_count,
-            average_expense=avg_expense,
-            expense_categories=category_breakdown,
-            period=filters.period,
-            start_date=filters.start_date,
-            end_date=filters.end_date
-        )
