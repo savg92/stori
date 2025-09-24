@@ -248,3 +248,7 @@ mock_expense_and_income.json
 Plan.md
 PRD.md
 .agentignore
+
+# Ignore github workflows
+*/.github
+.github
