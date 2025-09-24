@@ -6,7 +6,76 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 
 from services.mock_data_service import get_mock_data_service
-from populate_mock_data import mock_populator
+from setup_database import DatabaseSetup
+
+
+class MockPopulator:
+    """Mock data populator for API routes."""
+    
+    def __init__(self):
+        self.db_setup = DatabaseSetup()
+        self.mock_service = get_mock_data_service()
+    
+    async def populate_all_mock_data(self):
+        """Populate all mock data."""
+        import asyncio
+        from concurrent.futures import ThreadPoolExecutor
+        
+        loop = asyncio.get_event_loop()
+        with ThreadPoolExecutor() as executor:
+            # Create schema first
+            schema_result = await loop.run_in_executor(executor, self.db_setup.create_schema)
+            if not schema_result:
+                return {"error": "Failed to create schema"}
+            
+            # Populate users
+            users_result = await loop.run_in_executor(executor, self.db_setup.populate_users)
+            if not users_result:
+                return {"error": "Failed to populate users"}
+            
+            # Populate transactions
+            transactions_result = await loop.run_in_executor(executor, self.db_setup.populate_transactions)
+            if not transactions_result:
+                return {"error": "Failed to populate transactions"}
+            
+            return {
+                "users_populated": True,
+                "transactions_populated": True,
+                "schema_created": True
+            }
+    
+    async def clear_mock_data(self):
+        """Clear all mock data."""
+        import asyncio
+        from concurrent.futures import ThreadPoolExecutor
+        
+        loop = asyncio.get_event_loop()
+        with ThreadPoolExecutor() as executor:
+            # For now, just recreate schema (which drops tables)
+            result = await loop.run_in_executor(executor, self.db_setup.create_schema)
+            return {"cleared": result}
+    
+    def get_mock_data_summary(self):
+        """Get summary of mock data."""
+        users = self.mock_service.get_mock_users()
+        total_transactions = sum(len(self.mock_service.get_mock_transactions(user.id)) for user in users)
+        
+        return {
+            "total_users": len(users),
+            "total_transactions": total_transactions,
+            "users": [
+                {
+                    "id": user.id,
+                    "name": user.full_name,
+                    "transactions": len(self.mock_service.get_mock_transactions(user.id))
+                }
+                for user in users
+            ]
+        }
+
+
+# Create singleton instance
+mock_populator = MockPopulator()
 
 logger = logging.getLogger(__name__)
 

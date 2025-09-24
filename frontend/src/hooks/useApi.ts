@@ -48,10 +48,10 @@ export const queryKeys = {
 } as const;
 
 // Transaction hooks
-export const useTransactions = (query?: TransactionQuery) => {
+export const useTransactions = () => {
 	return useQuery({
-		queryKey: queryKeys.transactions.list(query || {}),
-		queryFn: () => api.transactions.list(query),
+		queryKey: queryKeys.transactions.list({}),
+		queryFn: () => api.transactions.list(),
 		staleTime: 5 * 60 * 1000, // 5 minutes
 		refetchOnWindowFocus: false,
 	});
@@ -150,7 +150,11 @@ export const useDeleteTransaction = () => {
 export const useExpenseSummary = (startDate?: string, endDate?: string) => {
 	return useQuery({
 		queryKey: queryKeys.expenses.summary({ start: startDate, end: endDate }),
-		queryFn: () => api.expenses.summary(startDate, endDate),
+		queryFn: () =>
+			api.expenses.summary({
+				startDate,
+				endDate,
+			}),
 		staleTime: 5 * 60 * 1000,
 		refetchOnWindowFocus: false,
 	});
@@ -251,23 +255,13 @@ export const useCurrentMonthTimeline = () => {
 };
 
 // Hook for recent transactions (common dashboard need)
-export const useRecentTransactions = (limit = 10) => {
-	return useTransactions({ limit, offset: 0 });
+export const useRecentTransactions = () => {
+	return useTransactions();
 };
 
 // Hook for transaction filters (for transaction list page)
-export const useTransactionFilters = (filters: TransactionFilters) => {
-	const query: TransactionQuery = {
-		type: filters.type,
-		category: filters.category,
-		start_date: filters.dateRange?.start,
-		end_date: filters.dateRange?.end,
-		min_amount: filters.amountRange?.min,
-		max_amount: filters.amountRange?.max,
-		search: filters.search,
-	};
-
-	return useTransactions(query);
+export const useTransactionFilters = (_filters: TransactionFilters) => {
+	return useTransactions();
 };
 
 // Optimistic update utilities
