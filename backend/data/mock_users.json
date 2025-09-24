@@ -1,0 +1,76 @@
+[
+    {
+        "id": "user_1_young_professional",
+        "email": "alex.johnson@email.com",
+        "full_name": "Alex Johnson",
+        "profile_type": "young_professional",
+        "preferences": {
+            "financial_goals": [
+                "save_for_apartment",
+                "build_emergency_fund"
+            ],
+            "spending_habits": "moderate",
+            "income_level": "entry_level"
+        }
+    },
+    {
+        "id": "user_2_family_household",
+        "email": "maria.garcia@email.com",
+        "full_name": "Maria Garcia",
+        "profile_type": "family_household",
+        "preferences": {
+            "financial_goals": [
+                "save_for_kids_education",
+                "mortgage_payments",
+                "family_vacation"
+            ],
+            "spending_habits": "family_focused",
+            "income_level": "dual_income"
+        }
+    },
+    {
+        "id": "user_3_freelancer",
+        "email": "sam.chen@email.com",
+        "full_name": "Sam Chen",
+        "profile_type": "freelancer",
+        "preferences": {
+            "financial_goals": [
+                "irregular_income_management",
+                "tax_savings",
+                "business_growth"
+            ],
+            "spending_habits": "variable",
+            "income_level": "irregular"
+        }
+    },
+    {
+        "id": "user_4_retiree",
+        "email": "robert.smith@email.com",
+        "full_name": "Robert Smith",
+        "profile_type": "retiree",
+        "preferences": {
+            "financial_goals": [
+                "fixed_income_budgeting",
+                "healthcare_savings",
+                "leisure_activities"
+            ],
+            "spending_habits": "conservative",
+            "income_level": "fixed_retirement"
+        }
+    },
+    {
+        "id": "user_5_student",
+        "email": "emma.wilson@email.com",
+        "full_name": "Emma Wilson",
+        "profile_type": "student",
+        "preferences": {
+            "financial_goals": [
+                "minimize_debt",
+                "textbook_budgeting",
+                "graduation_savings"
+            ],
+            "spending_habits": "budget_conscious",
+            "income_level": "part_time_student"
+        }
+    }
+]

@@ -9,6 +9,7 @@ from typing import Dict, List, Optional
 from providers.llms import LLMProviderFactory
 from langchain_core.language_models.llms import BaseLanguageModel
 from .repository import AIRepository
+from services.mock_data_service import MockDataService
 from .schemas import (
     AdviceInsight,
     AdvicePriority,
@@ -30,6 +31,7 @@ class AIService:
     def __init__(self, repository: AIRepository, llm_provider: Optional[BaseLanguageModel] = None):
         self.repository = repository
         self.llm_provider = llm_provider
+        self.mock_service = MockDataService()
     
     async def get_financial_advice(
         self, 
@@ -38,6 +40,10 @@ class AIService:
     ) -> AIAdviceResponse:
         """Generate AI-powered financial advice."""
         try:
+            # Check if this is a mock user
+            if self.mock_service.is_mock_user(user_id):
+                return self._get_mock_financial_advice(user_id, request)
+            
             # Get financial context
             financial_context = await self.repository.get_financial_context(
                 user_id, request.time_period_days
@@ -93,6 +99,10 @@ class AIService:
     ) -> ChatResponse:
         """Chat with AI about financial matters."""
         try:
+            # Check if this is a mock user
+            if self.mock_service.is_mock_user(user_id):
+                return self._get_mock_chat_response(user_id, request)
+            
             # Get financial context if requested
             financial_context = None
             if request.include_financial_context:
@@ -130,6 +140,10 @@ class AIService:
     ) -> AnalysisResult:
         """Perform financial data analysis."""
         try:
+            # Check if this is a mock user
+            if self.mock_service.is_mock_user(user_id):
+                return self._get_mock_financial_analysis(user_id, request)
+            
             results = {}
             insights = []
             
@@ -444,6 +458,261 @@ class AIService:
     
     async def _generate_predictions(self, user_id: str, analysis_type: str) -> Dict:
         """Generate predictions based on historical data."""
+        # Implementation for predictions
+        return {
+            'next_month_spending': 0,
+            'category_trends': [],
+            'confidence': 0.7
+        }
+    
+    def _get_mock_financial_advice(self, user_id: str, request: AdviceRequest) -> AIAdviceResponse:
+        """Generate financial advice for mock users."""
+        # Get mock user profile and transactions
+        mock_user = self.mock_service.get_mock_user(user_id)
+        transactions = self.mock_service.get_mock_transactions(user_id)
+        
+        # Calculate basic metrics from mock data
+        recent_transactions = [tx for tx in transactions[-30:]]  # Last 30 transactions
+        total_income = sum(tx.amount for tx in recent_transactions if tx.type == "income")
+        total_expenses = sum(abs(tx.amount) for tx in recent_transactions if tx.type == "expense")
+        net_amount = total_income - total_expenses
+        
+        # Generate insights based on mock user profile
+        insights = []
+        
+        if mock_user.profile_type == "young_professional":
+            insights.append(AdviceInsight(
+                title="Career-Focused Financial Growth",
+                description="As a young professional, focus on building an emergency fund and investing in your career development.",
+                priority=AdvicePriority.MEDIUM,
+                confidence_score=0.90,
+                actionable_steps=[
+                    "Save 3-6 months of expenses for emergencies",
+                    "Invest in professional development courses",
+                    "Start contributing to retirement accounts early"
+                ]
+            ))
+        elif mock_user.profile_type == "family_household":
+            insights.append(AdviceInsight(
+                title="Family Budget Optimization",
+                description="Managing household expenses efficiently while planning for your children's future.",
+                priority=AdvicePriority.HIGH,
+                confidence_score=0.95,
+                actionable_steps=[
+                    "Set up education savings accounts for children",
+                    "Review family insurance coverage",
+                    "Create separate budgets for family activities"
+                ]
+            ))
+        elif mock_user.profile_type == "freelancer":
+            insights.append(AdviceInsight(
+                title="Irregular Income Management", 
+                description="Build financial stability despite variable freelance income.",
+                priority=AdvicePriority.HIGH,
+                confidence_score=0.88,
+                actionable_steps=[
+                    "Create a buffer fund for lean months",
+                    "Track business expenses for tax deductions",
+                    "Set aside money for quarterly taxes"
+                ]
+            ))
+        elif mock_user.profile_type == "retiree":
+            insights.append(AdviceInsight(
+                title="Fixed Income Optimization",
+                description="Make the most of your retirement savings and Social Security benefits.",
+                priority=AdvicePriority.MEDIUM,
+                confidence_score=0.85,
+                actionable_steps=[
+                    "Review withdrawal rates from retirement accounts",
+                    "Consider healthcare cost planning",
+                    "Look into senior discounts for regular expenses"
+                ]
+            ))
+        else:  # student
+            insights.append(AdviceInsight(
+                title="Student Budget Management",
+                description="Learn essential budgeting skills while managing educational expenses.",
+                priority=AdvicePriority.MEDIUM,
+                confidence_score=0.80,
+                actionable_steps=[
+                    "Track all educational expenses for tax benefits",
+                    "Look for student discounts on regular purchases",
+                    "Start building credit responsibly"
+                ]
+            ))
+        
+        # Add spending-specific insights
+        if total_expenses > total_income:
+            insights.append(AdviceInsight(
+                title="Spending Alert",
+                description=f"Your recent expenses (${total_expenses:.2f}) exceed income (${total_income:.2f}).",
+                priority=AdvicePriority.HIGH,
+                amount_impact=total_expenses - total_income,
+                confidence_score=0.95,
+                actionable_steps=[
+                    "Review recent transactions for unnecessary spending",
+                    "Set up spending alerts on your accounts",
+                    "Create a strict weekly budget"
+                ]
+            ))
+        
+        # Generate personalized recommendations
+        recommendations = []
+        for insight in insights:
+            recommendations.extend(insight.actionable_steps[:2])
+        
+        # Generate summary based on profile
+        if net_amount > 0:
+            summary = f"Great job maintaining a positive cash flow of ${net_amount:.2f}! As a {mock_user.profile_type.replace('_', ' ')}, consider focusing on your specific financial goals."
+        else:
+            summary = f"Your recent spending shows a deficit of ${abs(net_amount):.2f}. Let's work on strategies specific to your situation as a {mock_user.profile_type.replace('_', ' ')}."
+        
+        return AIAdviceResponse(
+            advice_type=request.advice_type,
+            generated_at=datetime.utcnow(),
+            insights=insights,
+            summary=summary,
+            data_analysis={
+                "total_income": float(total_income),
+                "total_expenses": float(total_expenses),
+                "net_amount": float(net_amount),
+                "profile_type": mock_user.profile_type,
+                "transaction_count": len(recent_transactions)
+            },
+            recommendations=recommendations,
+            confidence_score=0.85
+        )
+    
+    def _get_mock_chat_response(self, user_id: str, request: ChatRequest) -> ChatResponse:
+        """Generate chat response for mock users."""
+        mock_user = self.mock_service.get_mock_user(user_id)
+        
+        # Simple keyword-based responses for demo
+        message = request.message.lower()
+        
+        if "budget" in message:
+            response_msg = f"As a {mock_user.profile_type.replace('_', ' ')}, I recommend creating a monthly budget that accounts for your specific needs. Would you like me to suggest budget categories based on your spending patterns?"
+        elif "save" in message or "savings" in message:
+            response_msg = f"Savings strategies for {mock_user.profile_type.replace('_', ' ')} should focus on your unique situation. Based on your profile, I suggest starting with an emergency fund."
+        elif "invest" in message:
+            response_msg = f"Investment advice varies by life stage. For someone with your {mock_user.profile_type.replace('_', ' ')} profile, let me suggest some appropriate investment options."
+        else:
+            response_msg = f"I understand you're asking about: '{request.message}'. Based on your profile as a {mock_user.profile_type.replace('_', ' ')}, here's some tailored guidance."
+        
+        return ChatResponse(
+            message=response_msg,
+            conversation_id=f"mock_conversation_{user_id}",
+            suggested_actions=[
+                "Review your recent transactions",
+                f"Set up a {mock_user.profile_type.replace('_', ' ')} budget",
+                "Check spending by category"
+            ],
+            financial_insights=[
+                f"Your spending aligns with typical {mock_user.profile_type.replace('_', ' ')} patterns",
+                "Consider setting monthly savings goals"
+            ],
+            confidence_score=0.75
+        )
+    
+    def _get_mock_financial_analysis(self, user_id: str, request: AnalysisRequest) -> AnalysisResult:
+        """Generate financial analysis for mock users."""
+        mock_user = self.mock_service.get_mock_user(user_id)
+        transactions = self.mock_service.get_mock_transactions(user_id)
+        
+        # Filter transactions based on analysis timeframe
+        recent_transactions = transactions[-request.context_days:] if request.context_days else transactions
+        
+        results = {}
+        insights = []
+        
+        if request.analysis_type == 'spending_patterns':
+            # Analyze spending by day of week
+            day_spending = {}
+            for tx in recent_transactions:
+                if tx.type == "expense":
+                    day = tx.transaction_date.strftime("%A")
+                    if day not in day_spending:
+                        day_spending[day] = []
+                    day_spending[day].append(abs(tx.amount))
+            
+            day_averages = {
+                day: sum(amounts) / len(amounts) if amounts else 0
+                for day, amounts in day_spending.items()
+            }
+            
+            results = {
+                'daily_averages': day_averages,
+                'total_analyzed_transactions': len(recent_transactions),
+                'profile_type': mock_user.profile_type
+            }
+            
+            # Generate insights
+            if day_averages:
+                highest_day = max(day_averages.items(), key=lambda x: x[1])
+                insights.append(f"You spend most on {highest_day[0]}s (${highest_day[1]:.2f} average)")
+                insights.append(f"Analysis based on {len(recent_transactions)} recent transactions")
+        
+        elif request.analysis_type == 'anomaly_detection':
+            # Simple anomaly detection for demo
+            expense_amounts = [abs(tx.amount) for tx in recent_transactions if tx.type == "expense"]
+            if expense_amounts:
+                avg_expense = sum(expense_amounts) / len(expense_amounts)
+                large_transactions = [tx for tx in recent_transactions 
+                                   if tx.type == "expense" and abs(tx.amount) > avg_expense * 2]
+                
+                results = {
+                    'anomalies': [
+                        {
+                            'date': tx.transaction_date.isoformat(),
+                            'amount': float(abs(tx.amount)),
+                            'category': tx.category,
+                            'description': tx.description
+                        } for tx in large_transactions
+                    ],
+                    'threshold': avg_expense * 2,
+                    'average_expense': avg_expense
+                }
+                
+                insights.append(f"Found {len(large_transactions)} transactions significantly above average")
+                if large_transactions:
+                    insights.append(f"Largest unusual expense: ${max(abs(tx.amount) for tx in large_transactions):.2f}")
+        
+        elif request.analysis_type == 'category_breakdown':
+            # Category analysis
+            category_totals = {}
+            for tx in recent_transactions:
+                if tx.type == "expense":
+                    if tx.category not in category_totals:
+                        category_totals[tx.category] = 0
+                    category_totals[tx.category] += abs(tx.amount)
+            
+            total_expenses = sum(category_totals.values())
+            categories = [
+                {
+                    'category': cat,
+                    'total_amount': amount,
+                    'percentage': (amount / total_expenses * 100) if total_expenses > 0 else 0
+                } 
+                for cat, amount in sorted(category_totals.items(), key=lambda x: x[1], reverse=True)
+            ]
+            
+            results = {
+                'categories': categories,
+                'total_expenses': total_expenses,
+                'category_count': len(categories)
+            }
+            
+            if categories:
+                insights.append(f"Top spending category: {categories[0]['category']} (${categories[0]['total_amount']:.2f})")
+                insights.append(f"Spending across {len(categories)} different categories")
+        
+        return AnalysisResult(
+            analysis_type=request.analysis_type,
+            results=results,
+            insights=insights,
+            confidence_score=0.80,
+            generated_at=datetime.utcnow()
+        )
         # Placeholder for prediction logic
         return {
             'next_month_estimate': 'Based on trends, estimated spending next month: $800-1200',

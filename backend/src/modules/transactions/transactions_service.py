@@ -13,6 +13,7 @@ from .transactions_schemas import (
     TransactionQuery,
     TransactionListResponse
 )
+from services.mock_data_service import get_mock_data_service
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +24,7 @@ class TransactionsService:
     def __init__(self):
         """Initialize service with repository."""
         self.repository = TransactionsRepository()
+        self.mock_service = get_mock_data_service()
     
     async def create_transaction(
         self, 
@@ -53,7 +55,12 @@ class TransactionsService:
     ) -> TransactionListResponse:
         """Get paginated transactions with metadata."""
         try:
-            # Get transactions and total count in parallel
+            # Check if this is a mock user - if so, use mock data
+            if self.mock_service.is_mock_user(user_id):
+                logger.info(f"Using mock data for user {user_id}")
+                return self._get_mock_transactions_paginated(user_id, query)
+            
+            # Get transactions and total count in parallel for real users
             transactions = await self.repository.get_transactions(user_id, query)
             total_count = await self.repository.count_transactions(user_id, query)
             
@@ -201,3 +208,57 @@ class TransactionsService:
         existing = await self.repository.get_transaction_by_id(user_id, transaction_id)
         if not existing:
             raise ValueError(f"Transaction {transaction_id} not found")
+    
+    def _get_mock_transactions_paginated(
+        self, 
+        user_id: str, 
+        query: TransactionQuery
+    ) -> TransactionListResponse:
+        """Get paginated mock transactions."""
+        # Get all mock transactions for the user
+        all_transactions = self.mock_service.get_mock_transactions(user_id)
+        
+        # Apply filtering
+        filtered_transactions = []
+        for tx in all_transactions:
+            # Date range filtering
+            if query.start_date and tx.transaction_date < query.start_date:
+                continue
+            if query.end_date and tx.transaction_date > query.end_date:
+                continue
+            
+            # Category filtering
+            if query.category and tx.category != query.category:
+                continue
+            
+            # Type filtering
+            if query.transaction_type and tx.type != query.transaction_type:
+                continue
+            
+            filtered_transactions.append(tx)
+        
+        # Sort by date (newest first)
+        filtered_transactions.sort(key=lambda x: x.transaction_date, reverse=True)
+        
+        # Apply pagination
+        total_count = len(filtered_transactions)
+        start_idx = query.offset
+        end_idx = start_idx + query.limit
+        paginated_transactions = filtered_transactions[start_idx:end_idx]
+        
+        # Calculate pagination metadata
+        total_pages = (total_count + query.limit - 1) // query.limit if total_count > 0 else 0
+        current_page = (query.offset // query.limit) + 1
+        has_next = current_page < total_pages
+        has_previous = current_page > 1
+        
+        return TransactionListResponse(
+            transactions=paginated_transactions,
+            total_count=total_count,
+            total_pages=total_pages,
+            current_page=current_page,
+            has_next=has_next,
+            has_previous=has_previous,
+            limit=query.limit,
+            offset=query.offset
+        )

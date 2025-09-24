@@ -1,0 +1,242 @@
+[
+    {
+        "user_id": "user_2_family_household",
+        "date": "2024-01-01",
+        "amount": 4200,
+        "category": "salary",
+        "description": "Primary income",
+        "type": "income"
+    },
+    {
+        "user_id": "user_2_family_household",
+        "date": "2024-01-01",
+        "amount": 3800,
+        "category": "salary",
+        "description": "Secondary income",
+        "type": "income"
+    },
+    {
+        "user_id": "user_2_family_household",
+        "date": "2024-01-02",
+        "amount": -2500,
+        "category": "rent",
+        "description": "Family home mortgage",
+        "type": "expense"
+    },
+    {
+        "user_id": "user_2_family_household",
+        "date": "2024-01-03",
+        "amount": -180,
+        "category": "groceries",
+        "description": "Costco family shopping",
+        "type": "expense"
+    },
+    {
+        "user_id": "user_2_family_household",
+        "date": "2024-01-04",
+        "amount": -120,
+        "category": "utilities",
+        "description": "Electric bill - large home",
+        "type": "expense"
+    },
+    {
+        "user_id": "user_2_family_household",
+        "date": "2024-01-05",
+        "amount": -850,
+        "category": "education",
+        "description": "Kids daycare",
+        "type": "expense"
+    },
+    {
+        "user_id": "user_2_family_household",
+        "date": "2024-01-08",
+        "amount": -95,
+        "category": "transportation",
+        "description": "Gas for SUV",
+        "type": "expense"
+    },
+    {
+        "user_id": "user_2_family_household",
+        "date": "2024-01-10",
+        "amount": -240,
+        "category": "groceries",
+        "description": "Weekly family groceries",
+        "type": "expense"
+    },
+    {
+        "user_id": "user_2_family_household",
+        "date": "2024-01-12",
+        "amount": -150,
+        "category": "healthcare",
+        "description": "Family health insurance",
+        "type": "expense"
+    },
+    {
+        "user_id": "user_2_family_household",
+        "date": "2024-01-14",
+        "amount": -80,
+        "category": "entertainment",
+        "description": "Family movie night",
+        "type": "expense"
+    },
+    {
+        "user_id": "user_2_family_household",
+        "date": "2024-01-15",
+        "amount": 4200,
+        "category": "salary",
+        "description": "Primary income",
+        "type": "income"
+    },
+    {
+        "user_id": "user_2_family_household",
+        "date": "2024-01-15",
+        "amount": 3800,
+        "category": "salary",
+        "description": "Secondary income",
+        "type": "income"
+    },
+    {
+        "user_id": "user_2_family_household",
+        "date": "2024-01-17",
+        "amount": -320,
+        "category": "shopping",
+        "description": "Kids clothing",
+        "type": "expense"
+    },
+    {
+        "user_id": "user_2_family_household",
+        "date": "2024-01-20",
+        "amount": -220,
+        "category": "groceries",
+        "description": "Whole Foods organic",
+        "type": "expense"
+    },
+    {
+        "user_id": "user_2_family_household",
+        "date": "2024-01-22",
+        "amount": -200,
+        "category": "utilities",
+        "description": "Internet, cable, phone",
+        "type": "expense"
+    },
+    {
+        "user_id": "user_2_family_household",
+        "date": "2024-01-25",
+        "amount": -110,
+        "category": "dining",
+        "description": "Family restaurant",
+        "type": "expense"
+    },
+    {
+        "user_id": "user_2_family_household",
+        "date": "2024-01-28",
+        "amount": -180,
+        "category": "transportation",
+        "description": "Car maintenance",
+        "type": "expense"
+    },
+    {
+        "user_id": "user_2_family_household",
+        "date": "2024-02-01",
+        "amount": 4200,
+        "category": "salary",
+        "description": "Primary income",
+        "type": "income"
+    },
+    {
+        "user_id": "user_2_family_household",
+        "date": "2024-02-01",
+        "amount": 3800,
+        "category": "salary",
+        "description": "Secondary income",
+        "type": "income"
+    },
+    {
+        "user_id": "user_2_family_household",
+        "date": "2024-02-02",
+        "amount": -2500,
+        "category": "rent",
+        "description": "Family home mortgage",
+        "type": "expense"
+    },
+    {
+        "user_id": "user_2_family_household",
+        "date": "2024-02-05",
+        "amount": -850,
+        "category": "education",
+        "description": "Kids daycare",
+        "type": "expense"
+    },
+    {
+        "user_id": "user_2_family_household",
+        "date": "2024-02-07",
+        "amount": -260,
+        "category": "groceries",
+        "description": "Monthly Costco trip",
+        "type": "expense"
+    },
+    {
+        "user_id": "user_2_family_household",
+        "date": "2024-02-10",
+        "amount": -400,
+        "category": "healthcare",
+        "description": "Kids dental checkup",
+        "type": "expense"
+    },
+    {
+        "user_id": "user_2_family_household",
+        "date": "2024-02-14",
+        "amount": -250,
+        "category": "dining",
+        "description": "Valentine's family dinner",
+        "type": "expense"
+    },
+    {
+        "user_id": "user_2_family_household",
+        "date": "2024-02-15",
+        "amount": 4200,
+        "category": "salary",
+        "description": "Primary income",
+        "type": "income"
+    },
+    {
+        "user_id": "user_2_family_household",
+        "date": "2024-02-15",
+        "amount": 3800,
+        "category": "salary",
+        "description": "Secondary income",
+        "type": "income"
+    },
+    {
+        "user_id": "user_2_family_household",
+        "date": "2024-02-18",
+        "amount": -200,
+        "category": "groceries",
+        "description": "Weekly shopping",
+        "type": "expense"
+    },
+    {
+        "user_id": "user_2_family_household",
+        "date": "2024-02-20",
+        "amount": -150,
+        "category": "entertainment",
+        "description": "Kids activities",
+        "type": "expense"
+    },
+    {
+        "user_id": "user_2_family_household",
+        "date": "2024-02-25",
+        "amount": -120,
+        "category": "transportation",
+        "description": "Gas and parking",
+        "type": "expense"
+    },
+    {
+        "user_id": "user_2_family_household",
+        "date": "2024-02-28",
+        "amount": -300,
+        "category": "shopping",
+        "description": "Household supplies",
+        "type": "expense"
+    }
+]
