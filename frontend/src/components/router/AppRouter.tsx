@@ -16,8 +16,6 @@ function AnalyticsPage() {
 	);
 }
 
-
-
 function SettingsPage() {
 	return (
 		<div className='space-y-6'>

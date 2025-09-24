@@ -17,13 +17,14 @@ export function AIChat() {
 	const [messages, setMessages] = useState<Message[]>([
 		{
 			id: '1',
-			content: "Hello! I'm your AI financial advisor. I can help you analyze your spending patterns, suggest budgeting strategies, and answer questions about your financial data. What would you like to know?",
+			content:
+				"Hello! I'm your AI financial advisor. I can help you analyze your spending patterns, suggest budgeting strategies, and answer questions about your financial data. What would you like to know?",
 			isUser: false,
 			timestamp: new Date(),
-		}
+		},
 	]);
 	const [inputMessage, setInputMessage] = useState('');
-	
+
 	const { mutate: sendMessage, isPending } = useAIChat();
 
 	const handleSendMessage = () => {
@@ -36,11 +37,11 @@ export function AIChat() {
 			timestamp: new Date(),
 		};
 
-		setMessages(prev => [...prev, userMessage]);
-		
+		setMessages((prev) => [...prev, userMessage]);
+
 		sendMessage(
-			{ 
-				message: inputMessage.trim()
+			{
+				message: inputMessage.trim(),
 			},
 			{
 				onSuccess: (response) => {
@@ -50,18 +51,19 @@ export function AIChat() {
 						isUser: false,
 						timestamp: new Date(),
 					};
-					setMessages(prev => [...prev, aiMessage]);
+					setMessages((prev) => [...prev, aiMessage]);
 				},
 				onError: (error) => {
 					const errorMessage: Message = {
 						id: (Date.now() + 1).toString(),
-						content: "I'm sorry, I'm having trouble connecting right now. Please try again later.",
+						content:
+							"I'm sorry, I'm having trouble connecting right now. Please try again later.",
 						isUser: false,
 						timestamp: new Date(),
 					};
-					setMessages(prev => [...prev, errorMessage]);
+					setMessages((prev) => [...prev, errorMessage]);
 					console.error('AI Chat error:', error);
-				}
+				},
 			}
 		);
 
@@ -76,16 +78,16 @@ export function AIChat() {
 	};
 
 	return (
-		<Card className="h-[600px] flex flex-col">
+		<Card className='h-[600px] flex flex-col'>
 			<CardHeader>
-				<CardTitle className="flex items-center space-x-2">
-					<Bot className="h-5 w-5 text-primary" />
+				<CardTitle className='flex items-center space-x-2'>
+					<Bot className='h-5 w-5 text-primary' />
 					<span>AI Financial Advisor</span>
 				</CardTitle>
 			</CardHeader>
-			<CardContent className="flex-1 flex flex-col space-y-4 p-4">
-				<ScrollArea className="flex-1 pr-4">
-					<div className="space-y-4">
+			<CardContent className='flex-1 flex flex-col space-y-4 p-4'>
+				<ScrollArea className='flex-1 pr-4'>
+					<div className='space-y-4'>
 						{messages.map((message) => (
 							<div
 								key={message.id}
@@ -94,8 +96,8 @@ export function AIChat() {
 								}`}
 							>
 								{!message.isUser && (
-									<div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-										<Bot className="h-4 w-4 text-primary" />
+									<div className='w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0'>
+										<Bot className='h-4 w-4 text-primary' />
 									</div>
 								)}
 								<div
@@ -105,32 +107,32 @@ export function AIChat() {
 											: 'bg-muted'
 									}`}
 								>
-									<p className="text-sm whitespace-pre-wrap">
+									<p className='text-sm whitespace-pre-wrap'>
 										{message.content}
 									</p>
-									<p className="text-xs opacity-70 mt-2">
+									<p className='text-xs opacity-70 mt-2'>
 										{message.timestamp.toLocaleTimeString([], {
 											hour: '2-digit',
-											minute: '2-digit'
+											minute: '2-digit',
 										})}
 									</p>
 								</div>
 								{message.isUser && (
-									<div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-										<User className="h-4 w-4 text-primary" />
+									<div className='w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0'>
+										<User className='h-4 w-4 text-primary' />
 									</div>
 								)}
 							</div>
 						))}
 						{isPending && (
-							<div className="flex items-start space-x-3">
-								<div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-									<Bot className="h-4 w-4 text-primary" />
+							<div className='flex items-start space-x-3'>
+								<div className='w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0'>
+									<Bot className='h-4 w-4 text-primary' />
 								</div>
-								<div className="bg-muted rounded-lg p-3">
-									<div className="flex items-center space-x-2">
-										<Loader2 className="h-4 w-4 animate-spin" />
-										<span className="text-sm text-muted-foreground">
+								<div className='bg-muted rounded-lg p-3'>
+									<div className='flex items-center space-x-2'>
+										<Loader2 className='h-4 w-4 animate-spin' />
+										<span className='text-sm text-muted-foreground'>
 											Thinking...
 										</span>
 									</div>
@@ -139,25 +141,25 @@ export function AIChat() {
 						)}
 					</div>
 				</ScrollArea>
-				
-				<div className="flex space-x-2">
+
+				<div className='flex space-x-2'>
 					<Input
-						placeholder="Ask me about your finances..."
+						placeholder='Ask me about your finances...'
 						value={inputMessage}
 						onChange={(e) => setInputMessage(e.target.value)}
 						onKeyPress={handleKeyPress}
 						disabled={isPending}
-						className="flex-1"
+						className='flex-1'
 					/>
 					<Button
 						onClick={handleSendMessage}
 						disabled={!inputMessage.trim() || isPending}
-						size="icon"
+						size='icon'
 					>
 						{isPending ? (
-							<Loader2 className="h-4 w-4 animate-spin" />
+							<Loader2 className='h-4 w-4 animate-spin' />
 						) : (
-							<Send className="h-4 w-4" />
+							<Send className='h-4 w-4' />
 						)}
 					</Button>
 				</div>

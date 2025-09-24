@@ -1,9 +1,4 @@
-import {
-	Card,
-	CardContent,
-	CardHeader,
-	CardTitle,
-} from '../ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { TrendingUp, TrendingDown, DollarSign, CreditCard } from 'lucide-react';
 import { ExpenseChart } from '@/components/charts/ExpenseChart';
 import { TimelineChart } from '@/components/charts/TimelineChart';
@@ -63,71 +58,76 @@ function StatCard({
 
 export function DashboardOverview() {
 	const { data: summaryData } = useCurrentMonthSummary();
-	
+
 	// Use API data when available, fallback to demo data
-	const stats = summaryData ? [
-		{
-			title: 'Total Balance',
-			value: `$${summaryData.net_income.toFixed(2)}`,
-			description: 'current balance',
-			icon: DollarSign,
-			trend: summaryData.net_income > 0 ? 'up' as const : 'down' as const,
-		},
-		{
-			title: 'Monthly Income',
-			value: `$${summaryData.total_income.toFixed(2)}`,
-			description: 'this month',
-			icon: TrendingUp,
-			trend: 'up' as const,
-		},
-		{
-			title: 'Monthly Expenses',
-			value: `$${summaryData.total_expenses.toFixed(2)}`,
-			description: 'this month',
-			icon: TrendingDown,
-			trend: 'down' as const,
-		},
-		{
-			title: 'Transaction Count',
-			value: summaryData.expense_categories.reduce((sum, cat) => sum + cat.transaction_count, 0).toString(),
-			description: 'this month',
-			icon: CreditCard,
-			trend: 'up' as const,
-		},
-	] : [
-		{
-			title: 'Total Balance',
-			value: '$12,453.20',
-			description: 'from last month',
-			icon: DollarSign,
-			trend: 'up' as const,
-			trendValue: '+12%',
-		},
-		{
-			title: 'Monthly Income',
-			value: '$5,420.00',
-			description: 'this month',
-			icon: TrendingUp,
-			trend: 'up' as const,
-			trendValue: '+8%',
-		},
-		{
-			title: 'Monthly Expenses',
-			value: '$2,134.50',
-			description: 'this month',
-			icon: TrendingDown,
-			trend: 'down' as const,
-			trendValue: '-3%',
-		},
-		{
-			title: 'Transactions',
-			value: '127',
-			description: 'this month',
-			icon: CreditCard,
-			trend: 'up' as const,
-			trendValue: '+15',
-		},
-	];
+	const stats = summaryData
+		? [
+				{
+					title: 'Total Balance',
+					value: `$${summaryData.net_income.toFixed(2)}`,
+					description: 'current balance',
+					icon: DollarSign,
+					trend:
+						summaryData.net_income > 0 ? ('up' as const) : ('down' as const),
+				},
+				{
+					title: 'Monthly Income',
+					value: `$${summaryData.total_income.toFixed(2)}`,
+					description: 'this month',
+					icon: TrendingUp,
+					trend: 'up' as const,
+				},
+				{
+					title: 'Monthly Expenses',
+					value: `$${summaryData.total_expenses.toFixed(2)}`,
+					description: 'this month',
+					icon: TrendingDown,
+					trend: 'down' as const,
+				},
+				{
+					title: 'Transaction Count',
+					value: summaryData.expense_categories
+						.reduce((sum, cat) => sum + cat.transaction_count, 0)
+						.toString(),
+					description: 'this month',
+					icon: CreditCard,
+					trend: 'up' as const,
+				},
+		  ]
+		: [
+				{
+					title: 'Total Balance',
+					value: '$12,453.20',
+					description: 'from last month',
+					icon: DollarSign,
+					trend: 'up' as const,
+					trendValue: '+12%',
+				},
+				{
+					title: 'Monthly Income',
+					value: '$5,420.00',
+					description: 'this month',
+					icon: TrendingUp,
+					trend: 'up' as const,
+					trendValue: '+8%',
+				},
+				{
+					title: 'Monthly Expenses',
+					value: '$2,134.50',
+					description: 'this month',
+					icon: TrendingDown,
+					trend: 'down' as const,
+					trendValue: '-3%',
+				},
+				{
+					title: 'Transactions',
+					value: '127',
+					description: 'this month',
+					icon: CreditCard,
+					trend: 'up' as const,
+					trendValue: '+15',
+				},
+		  ];
 
 	return (
 		<div className='space-y-6'>
@@ -151,7 +151,7 @@ export function DashboardOverview() {
 				<RecentTransactions />
 				<ExpenseChart />
 			</div>
-			
+
 			<div className='grid gap-4'>
 				<TimelineChart />
 			</div>
