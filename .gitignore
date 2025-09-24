@@ -253,6 +253,12 @@ PRD.md
 */.github
 .github
 
-# ignore supabase folders
+# ignore supabase folders including their gitignore  and config,toml files
 */.supabase
 */supabase
+.supabase
+supabase
+.supabase/.gitignore
+supabase/.gitignore
+.supabase/config.toml
+supabase/config.toml
