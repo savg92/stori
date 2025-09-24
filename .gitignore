@@ -224,7 +224,7 @@ debug/
 *.frontend_agent.md
 PRD.md
 Plan.md
-AGENTS.md
+.AGENTS.md
 resume.md
 backend_agent.md
 frontend_agent.md
@@ -237,3 +237,13 @@ backend/agent/
 !README.MD
 !readme.md
 !readme.MD
+
+# Project documentation and config files not to be committed
+AGENTS.md
+backend_agent.md
+DEVELOPMENT_SUMMARY.md
+DOCKER_SETUP.md
+docker-compose.yml
+mock_expense_and_income.json
+Plan.md
+PRD.md
