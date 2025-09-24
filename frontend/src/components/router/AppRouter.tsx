@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { DashboardLayout } from '../layout/DashboardLayout';
 import { DashboardOverview } from '../dashboard/DashboardOverview';
 import { TransactionList } from '../transactions/TransactionList';
+import { AIChatPage } from '../../pages/AIChatPage';
 
 // Placeholder components for future implementation
 function AnalyticsPage() {
@@ -15,16 +16,7 @@ function AnalyticsPage() {
 	);
 }
 
-function AIAdvisorPage() {
-	return (
-		<div className='space-y-6'>
-			<h1 className='text-3xl font-bold tracking-tight'>AI Advisor</h1>
-			<p className='text-muted-foreground'>
-				AI-powered financial advice and chat interface coming soon...
-			</p>
-		</div>
-	);
-}
+
 
 function SettingsPage() {
 	return (
@@ -56,7 +48,7 @@ export function AppRouter() {
 					/>
 					<Route
 						path='/ai'
-						element={<AIAdvisorPage />}
+						element={<AIChatPage />}
 					/>
 					<Route
 						path='/settings'

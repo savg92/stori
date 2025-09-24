@@ -222,5 +222,18 @@ debug/
 *.resume.md
 *.backend_agent.md
 *.frontend_agent.md
+PRD.md
+Plan.md
+AGENTS.md
+resume.md
+backend_agent.md
+frontend_agent.md
 frontend/agent/
 backend/agent/ 
+
+# ignore all md files except README.md
+*.md
+!README.md
+!README.MD
+!readme.md
+!readme.MD
