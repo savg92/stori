@@ -247,3 +247,4 @@ docker-compose.yml
 mock_expense_and_income.json
 Plan.md
 PRD.md
+.agentignore
