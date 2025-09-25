@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import path from 'path';
 import { defineConfig } from 'vite';
 import tailwindcss from '@tailwindcss/vite';
@@ -38,5 +39,22 @@ export default defineConfig({
 		},
 		// Increase chunk size warning limit to 750kb as we've optimized chunking
 		chunkSizeWarningLimit: 750,
+	},
+	test: {
+		globals: true,
+		environment: 'jsdom',
+		setupFiles: ['./src/test/setup.ts'],
+		css: true,
+		exclude: [
+			'**/node_modules/**',
+			'**/dist/**',
+			'**/cypress/**',
+			'**/.{idea,git,cache,output,temp}/**',
+			'**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*',
+			'**/e2e/**'
+		],
+		deps: {
+			external: ['@testing-library/react'],
+		},
 	},
 });

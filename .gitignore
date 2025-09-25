@@ -248,9 +248,9 @@ Plan.md
 PRD.md
 .agentignore
 
-# Ignore github workflows
-*/.github
-.github
+# Ignore github copilot-instructions files
+*.github/copilot-instructions
+
 
 # ignore supabase folders including their gitignore  and config,toml files
 */.supabase

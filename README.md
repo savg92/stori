@@ -2,7 +2,6 @@
 
 A modern, full-stack expense tracker with AI-powered financial advice built for Stori's Generative AI Squad technical challenge.
 
-![Next.js](https://img.shields.io/badge/Next.js-black?style=flat-square&logo=next.js&logoColor=white)
 ![React](https://img.shields.io/badge/React-61DAFB?style=flat-square&logo=react&logoColor=black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)
@@ -22,7 +21,7 @@ A modern, full-stack expense tracker with AI-powered financial advice built for 
 ### 🤖 **AI Financial Advisor**
 
 - Personalized financial advice based on spending patterns
-- Multi-provider AI support (OpenAI, Azure, AWS Bedrock, Ollama)
+- Multi-provider AI support (OpenAI, Azure, AWS Bedrock, Ollama, OpenRouter)
 - Contextual recommendations using transaction history
 - Chat-style interface with message history
 
@@ -90,6 +89,7 @@ cd stori-expense-tracker
 Create `.env` files in both `backend/` and `frontend/` directories:
 
 #### Backend `.env`
+You can copy from the provided `.env.example` file in the `backend/` directory and fill in your actual values.
 
 ```bash
 # Supabase Configuration
@@ -97,9 +97,16 @@ SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
-# AI Configuration
+# AI provider Configuration
 OPENAI_API_KEY=your-openai-api-key
 DEFAULT_LLM_PROVIDER=openai
+
+# Ollama Configuration
+OLLAMA_API_URL=http://localhost:11434
+OLLAMA_MODEL_NAME=llama27b-chat
+
+# OpenRouter Configuration
+OPENROUTER_API_KEY=your-openrouter-api-key
 
 # Application Settings
 ENVIRONMENT=development
@@ -107,6 +114,7 @@ DEBUG=true
 ```
 
 #### Frontend `.env`
+You can copy from the provided `.env.example` file in the `frontend/` directory and fill in your actual values.
 
 ```bash
 # Supabase Configuration
@@ -152,7 +160,7 @@ bun dev
 
 ### 5. Access the Application
 
-- **Frontend**: http://localhost:5174 (or :3000 with Docker)
+- **Frontend**: http://localhost:5173 (or :3000 with Docker)
 - **Backend API**: http://localhost:8000
 - **API Docs**: http://localhost:8000/docs
 
