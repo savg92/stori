@@ -89,6 +89,7 @@ cd stori-expense-tracker
 Create `.env` files in both `backend/` and `frontend/` directories:
 
 #### Backend `.env`
+
 You can copy from the provided `.env.example` file in the `backend/` directory and fill in your actual values.
 
 ```bash
@@ -114,6 +115,7 @@ DEBUG=true
 ```
 
 #### Frontend `.env`
+
 You can copy from the provided `.env.example` file in the `frontend/` directory and fill in your actual values.
 
 ```bash
@@ -166,10 +168,14 @@ bun dev
 
 ### 6. Test Authentication
 
-Use these test credentials:
+Use these test credentials (any of the following working accounts):
 
-- **Email**: `test@example.com`
-- **Password**: `Test123!`
+- **Alex Johnson**: `alex.johnson.test123@gmail.com` / `testpassword123`
+- **Maria Garcia**: `maria.garcia.test123@gmail.com` / `testpassword123`
+- **Sam Chen**: `sam.chen.test123@gmail.com` / `testpassword123`
+- **Robert Smith**: `robert.smith.test123@gmail.com` / `testpassword123`
+
+Each account has different financial data and spending patterns for testing.
 
 ## 📚 API Documentation
 
@@ -297,13 +303,13 @@ bun run test:e2e
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## 📄 License
+<!-- ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details. -->
 
 ## 🆘 Support
 
-For support, email support@stori.com or create an issue on GitHub.
+For support, create an issue on GitHub.
 
 ## 🙏 Acknowledgments
 
