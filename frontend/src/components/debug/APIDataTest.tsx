@@ -128,7 +128,7 @@ export function APIDataTest() {
 								{
 									timelineData?.data_points?.[
 										timelineData.data_points.length - 1
-									]?.income
+									]?.total_income
 								}
 							</p>
 						)}
