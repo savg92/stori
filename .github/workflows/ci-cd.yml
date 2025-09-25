@@ -59,7 +59,7 @@ jobs:
         run: |
           bun run type-check || echo "Type checking completed with issues"
           bun run lint || echo "Linting completed with issues" 
-          bun test || echo "Frontend tests completed with issues"
+          bun run test --run || echo "Frontend tests completed with issues"
 
   # Infrastructure deployment job (run separately when needed)
   deploy-infrastructure:
@@ -81,11 +81,20 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: "~1.0"
+          terraform_version: "1.5.0"  # Use specific stable version
 
       - name: Terraform Init
         working-directory: ./infrastructure
-        run: terraform init
+        run: |
+          echo "Initializing Terraform..."
+          terraform init -no-color
+          terraform version
+
+      - name: Terraform Validate
+        working-directory: ./infrastructure
+        run: |
+          echo "Validating Terraform configuration..."
+          terraform validate -no-color
 
       - name: Terraform Plan
         working-directory: ./infrastructure
@@ -95,7 +104,10 @@ jobs:
           TF_VAR_supabase_service_key: ${{ secrets.SUPABASE_SERVICE_KEY }}
           TF_VAR_openrouter_api_key: ${{ secrets.OPENROUTER_API_KEY }}
           TF_VAR_aws_region: us-east-1
-        run: terraform plan
+        run: |
+          echo "Creating Terraform plan..."
+          terraform plan -no-color -detailed-exitcode
+          echo "Terraform plan completed successfully"
 
       - name: Terraform Apply
         working-directory: ./infrastructure
@@ -105,7 +117,16 @@ jobs:
           TF_VAR_supabase_service_key: ${{ secrets.SUPABASE_SERVICE_KEY }}
           TF_VAR_openrouter_api_key: ${{ secrets.OPENROUTER_API_KEY }}
           TF_VAR_aws_region: us-east-1
-        run: terraform apply -auto-approve
+        run: |
+          echo "Applying Terraform configuration..."
+          terraform apply -auto-approve -no-color
+          echo "Terraform apply completed successfully"
+
+      - name: Output Infrastructure Info
+        working-directory: ./infrastructure
+        run: |
+          echo "Getting Terraform outputs..."
+          terraform output -no-color || echo "No outputs available yet"
 
   # Application deployment (runs after infrastructure is set up)
   deploy-application:
