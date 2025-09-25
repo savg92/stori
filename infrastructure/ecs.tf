@@ -260,12 +260,6 @@ resource "aws_ecs_service" "backend" {
 
   depends_on = [aws_lb_listener.main]
 
-  # Deployment configuration for zero-downtime deployments
-  deployment_configuration {
-    maximum_percent         = 200
-    minimum_healthy_percent = 100
-  }
-
   tags = {
     Name = "stori-backend-service"
   }
@@ -291,12 +285,6 @@ resource "aws_ecs_service" "frontend" {
   }
 
   depends_on = [aws_lb_listener.main]
-
-  # Deployment configuration for zero-downtime deployments
-  deployment_configuration {
-    maximum_percent         = 200
-    minimum_healthy_percent = 100
-  }
 
   tags = {
     Name = "stori-frontend-service"
