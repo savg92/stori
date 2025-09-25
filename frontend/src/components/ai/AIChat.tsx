@@ -149,10 +149,10 @@ export function AIChat() {
 					</div>
 				</CardTitle>
 			</CardHeader>
-			<CardContent className='flex-1 flex flex-col space-y-4 p-4 sm:p-6'>
+			<CardContent className='flex-1 flex flex-col space-y-4 p-4 sm:p-6 min-h-0'>
 				<ScrollArea
 					ref={scrollAreaRef}
-					className='flex-1 pr-4'
+					className='flex-1 pr-4 min-h-0'
 				>
 					<div className='space-y-4 pb-4'>
 						{messages.map((message) => (
@@ -210,7 +210,7 @@ export function AIChat() {
 					</div>
 				</ScrollArea>
 
-				<div className='space-y-3 sm:space-y-4 border-t bg-gradient-to-r from-background/90 to-muted/20 p-4 sm:p-6'>
+				<div className='space-y-3 sm:space-y-4 border-t pt-4 flex-shrink-0'>
 					<div className='w-full'>
 						<p className='text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-3 font-medium flex items-center gap-2'>
 							<Lightbulb className='h-4 w-4' />

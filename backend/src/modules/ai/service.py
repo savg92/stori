@@ -5,6 +5,9 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Dict, List, Optional
 
+from langchain.chains import LLMChain
+from langchain.prompts import PromptTemplate
+
 from .repository import AIRepository
 from .schemas import (
     AdviceInsight,
@@ -27,6 +30,32 @@ class AIService:
     def __init__(self, repository: AIRepository, llm_provider=None):
         self.repository = repository
         self.llm_provider = llm_provider
+        self.logger = logging.getLogger(__name__)
+        self._chat_prompt = self._create_chat_prompt()
+        
+    def _create_chat_prompt(self) -> PromptTemplate:
+        """Create a prompt template for AI chat responses."""
+        template = """You are a helpful financial advisor. Answer the user's question directly and concisely in 1-2 sentences maximum.
+
+Financial Context: {financial_context}
+User Question: {question}
+
+Give a brief, direct answer that references the data period when relevant. Be aware of the current date vs. the data period to provide temporal context (e.g., "based on your data from last year" if data is old). Be conversational and helpful without extra advice or explanations."""
+        
+        return PromptTemplate(
+            template=template,
+            input_variables=["financial_context", "question"]
+        )
+    
+    def _create_chat_chain(self):
+        """Create LLM chain for chat responses."""
+        if not self.llm_provider:
+            return None
+        return LLMChain(
+            llm=self.llm_provider,
+            prompt=self._chat_prompt,
+            verbose=True
+        )
     
     async def get_financial_advice(
         self, 
@@ -201,114 +230,167 @@ class AIService:
             )
     
     def _generate_chat_response(self, message: str, context=None) -> Dict:
-        """Generate a chat response based on user message and context."""
+        """Generate a chat response using the LLM provider or fallback to basic responses."""
+        # Try to use LLM provider first
+        if self.llm_provider:
+            try:
+                chat_chain = self._create_chat_chain()
+                if chat_chain:
+                    # Format financial context for the prompt
+                    financial_context = self._format_financial_context(context)
+                    
+                    # Generate response using LLM
+                    result = chat_chain.invoke({
+                        "financial_context": financial_context,
+                        "question": message
+                    })
+                    
+                    ai_response = result["text"].strip()
+                    
+                    # Extract suggested actions from context if available
+                    suggested_actions = self._extract_suggested_actions(context)
+                    financial_insights = self._extract_financial_insights(context)
+                    
+                    return {
+                        'message': ai_response,
+                        'suggested_actions': suggested_actions,
+                        'financial_insights': financial_insights,
+                        'confidence_score': 0.9  # Higher confidence for LLM responses
+                    }
+            except Exception as e:
+                self.logger.warning(f"LLM chat failed, falling back to basic response: {e}")
+        
+        # Fallback to basic response if LLM fails or unavailable
+        return self._generate_fallback_chat_response(message, context)
+    def _format_financial_context(self, context) -> str:
+        """Format financial context for LLM prompt."""
+        if not context:
+            return "No financial data available. User should connect their financial accounts for personalized advice."
+        
+        context_parts = []
+        
+        # Add current date for context
+        from datetime import date
+        current_date = date.today()
+        context_parts.append(f"Current date: {current_date.isoformat()}")
+        
+        # Add date range
+        if hasattr(context, 'date_range') and context.date_range:
+            if isinstance(context.date_range, dict):
+                start_date = context.date_range.get('start_date', '')
+                end_date = context.date_range.get('end_date', '')
+                context_parts.append(f"Data period: {start_date} to {end_date}")
+            else:
+                context_parts.append(f"Time period: {context.date_range}")
+        
+        # Add financial summary
+        if hasattr(context, 'total_income') and hasattr(context, 'total_expenses'):
+            net_amount = context.total_income - abs(context.total_expenses)
+            savings_rate = (net_amount / context.total_income * 100) if context.total_income > 0 else 0
+            
+            context_parts.extend([
+                f"Total income: ${context.total_income:.2f}",
+                f"Total expenses: ${abs(context.total_expenses):.2f}",
+                f"Net amount: ${net_amount:.2f}",
+                f"Savings rate: {savings_rate:.1f}%"
+            ])
+        
+        # Add transaction summary
+        if hasattr(context, 'transaction_count'):
+            context_parts.append(f"Number of transactions: {context.transaction_count}")
+        
+        # Add top categories
+        if hasattr(context, 'top_categories') and context.top_categories:
+            categories_text = ", ".join([
+                f"{cat['category']}: ${abs(cat['total_amount']):.2f}"
+                for cat in context.top_categories[:3]
+            ])
+            context_parts.append(f"Top spending categories: {categories_text}")
+        
+        return "\n".join(context_parts) if context_parts else "Limited financial data available."
+    
+    def _extract_suggested_actions(self, context) -> List[str]:
+        """Extract relevant suggested actions based on context."""
+        if not context:
+            return ["Connect financial data", "Ask general financial advice"]
+        
+        actions = []
+        
+        # Add context-specific actions
+        if hasattr(context, 'total_income') and hasattr(context, 'total_expenses'):
+            net_amount = context.total_income - abs(context.total_expenses)
+            savings_rate = (net_amount / context.total_income * 100) if context.total_income > 0 else 0
+            
+            if savings_rate < 10:
+                actions.extend(["Review budget", "Find cost-cutting opportunities"])
+            elif savings_rate < 20:
+                actions.extend(["Optimize expenses", "Increase savings rate"])
+            else:
+                actions.extend(["Investment planning", "Long-term financial goals"])
+        
+        # Add general actions if none specific
+        if not actions:
+            actions = ["Track expenses", "Set financial goals", "Review spending patterns"]
+        
+        return actions[:4]  # Limit to 4 actions
+    
+    def _extract_financial_insights(self, context) -> List[str]:
+        """Extract key financial insights from context."""
+        if not context:
+            return []
+        
+        insights = []
+        
+        if hasattr(context, 'total_income') and hasattr(context, 'total_expenses'):
+            net_amount = context.total_income - abs(context.total_expenses)
+            savings_rate = (net_amount / context.total_income * 100) if context.total_income > 0 else 0
+            
+            insights.extend([
+                f"Savings rate: {savings_rate:.1f}%",
+                f"Monthly net: ${net_amount:.2f}",
+                f"Expense ratio: {(abs(context.total_expenses) / context.total_income * 100):.1f}%"
+            ])
+        
+        if hasattr(context, 'top_categories') and context.top_categories:
+            top_cat = context.top_categories[0]
+            insights.append(f"Top category: {top_cat['category']} (${abs(top_cat['total_amount']):.2f})")
+        
+        return insights[:4]  # Limit to 4 insights
+    
+    def _generate_fallback_chat_response(self, message: str, context=None) -> Dict:
+        """Generate basic chat response when LLM is unavailable."""
         message_lower = message.lower()
         
         response = {
             'message': "",
             'suggested_actions': [],
             'financial_insights': [],
-            'confidence_score': 0.8
+            'confidence_score': 0.6  # Lower confidence for fallback
         }
         
-        if context:
-            # Handle spending-related questions
-            if any(word in message_lower for word in ['spending', 'expense', 'spend', 'category', 'categories', 'biggest']):
-                if context.top_categories:
-                    top_cats = context.top_categories[:3]
-                    
-                    if 'biggest' in message_lower or 'top' in message_lower:
-                        response['message'] = f"Your biggest spending category is **{top_cats[0]['category']}** at ${abs(top_cats[0]['total_amount']):.2f}."
-                        if len(top_cats) > 1:
-                            other_cats = ", ".join([f"{cat['category']} (${abs(cat['total_amount']):.2f})" for cat in top_cats[1:]])
-                            response['message'] += f" Your other top categories are: {other_cats}."
-                    else:
-                        categories_text = ", ".join([f"**{cat['category']}**: ${abs(cat['total_amount']):.2f}" for cat in top_cats])
-                        response['message'] = f"Here are your top spending categories: {categories_text}. "
-                        response['message'] += f"Total expenses: ${abs(context.total_expenses):.2f} across {context.transaction_count} transactions."
-                    
-                    response['suggested_actions'] = ["Set spending limits", "Track daily expenses", "Compare to last month"]
-                    response['financial_insights'] = [
-                        f"Top category: {top_cats[0]['category']} (${abs(top_cats[0]['total_amount']):.2f})",
-                        f"Total expenses: ${abs(context.total_expenses):.2f}",
-                        f"Average per transaction: ${abs(context.total_expenses) / context.transaction_count:.2f}"
-                    ]
-                else:
-                    response['message'] = f"Your total expenses are ${abs(context.total_expenses):.2f} from {context.transaction_count} transactions. I don't have detailed category breakdowns available right now."
-                    response['suggested_actions'] = ["Review transaction categories", "Add category labels"]
-                    
-            # Handle expense reduction questions
-            elif any(word in message_lower for word in ['reduce', 'cut', 'lower', 'save money', 'decrease']):
-                if context.top_categories:
+        # Helper function to add date context to responses
+        def add_date_context(base_message: str) -> str:
+            if context and hasattr(context, 'date_range') and context.date_range:
+                return f"{base_message}\n\n*Based on data from {context.date_range}*"
+            return base_message
+        
+        if context and hasattr(context, 'total_income'):
+            # Handle spending questions
+            if any(word in message_lower for word in ['spend', 'spending', 'expense', 'cost', 'category']):
+                base_message = f"Your total expenses are ${abs(context.total_expenses):.2f}. "
+                if hasattr(context, 'top_categories') and context.top_categories:
                     top_cat = context.top_categories[0]
-                    response['message'] = f"To reduce expenses, I'd suggest looking at your largest category: **{top_cat['category']}** (${abs(top_cat['total_amount']):.2f}). "
-                    
-                    if 'rent' in top_cat['category'].lower() or 'housing' in top_cat['category'].lower():
-                        response['message'] += "Consider negotiating rent, finding roommates, or exploring different housing options."
-                    elif 'food' in top_cat['category'].lower() or 'grocery' in top_cat['category'].lower():
-                        response['message'] += "Try meal planning, cooking at home more, or buying generic brands."
-                    elif 'transport' in top_cat['category'].lower() or 'gas' in top_cat['category'].lower():
-                        response['message'] += "Consider carpooling, public transport, or combining errands into fewer trips."
-                    else:
-                        response['message'] += "Review if all expenses in this category are necessary and look for alternatives."
-                        
-                    response['suggested_actions'] = ["Set category budgets", "Track daily spending", "Find alternatives"]
-                else:
-                    response['message'] = "To reduce your expenses, start by categorizing your transactions to identify patterns. Focus on the largest expense categories first."
-                    response['suggested_actions'] = ["Categorize transactions", "Set monthly budgets", "Track daily spending"]
-                    
-            # Handle income-related questions  
-            elif 'income' in message_lower:
-                response['message'] = f"Your total income is ${context.total_income:.2f} with expenses of ${abs(context.total_expenses):.2f}, "
-                response['message'] += f"leaving you with a net of ${context.net_amount:.2f}."
-                response['suggested_actions'] = ["Track income sources", "Plan for income growth", "Optimize tax savings"]
+                    base_message += f"Your biggest expense category is **{top_cat['category']}** at ${abs(top_cat['total_amount']):.2f}."
+                response['message'] = add_date_context(base_message)
+                response['suggested_actions'] = ["Review top categories", "Find cost-cutting opportunities", "Set category budgets"]
                 response['financial_insights'] = [
-                    f"Total income: ${context.total_income:.2f}",
                     f"Total expenses: ${abs(context.total_expenses):.2f}",
-                    f"Net amount: ${context.net_amount:.2f}"
+                    f"Top category: {context.top_categories[0]['category'] if context.top_categories else 'N/A'}"
                 ]
-                
-            # Handle savings/financial health questions
-            elif any(word in message_lower for word in ['saving', 'save', 'health', 'summary', 'financial', 'enough']):
-                net_amount = context.total_income - abs(context.total_expenses)
-                savings_rate = (net_amount / context.total_income * 100) if context.total_income > 0 else 0
-                
-                if 'enough' in message_lower:
-                    if savings_rate >= 20:
-                        response['message'] = f"Yes! You're saving {savings_rate:.1f}% of your income (${net_amount:.2f}), which is excellent. The general recommendation is 20% or more."
-                    elif savings_rate >= 10:
-                        response['message'] = f"You're saving {savings_rate:.1f}% (${net_amount:.2f}), which is good but could be improved. Aim for 20% if possible."
-                    else:
-                        response['message'] = f"You're currently saving {savings_rate:.1f}% (${net_amount:.2f}). Most experts recommend saving at least 20% of your income."
-                else:
-                    response['message'] = f"**Financial Health Summary:** You're earning ${context.total_income:.2f} and spending ${abs(context.total_expenses):.2f}. "
-                    response['message'] += f"Your savings rate is **{savings_rate:.1f}%** (${net_amount:.2f}). "
-                    
-                    if savings_rate > 20:
-                        response['message'] += "🎉 Excellent savings rate! You're building wealth effectively."
-                    elif savings_rate > 10:
-                        response['message'] += "👍 Good savings rate with room for improvement."
-                    else:
-                        response['message'] += "💡 Consider boosting your savings rate for better financial security."
-                
-                response['suggested_actions'] = ["Set savings goals", "Automate savings", "Review budget monthly"]
-                response['financial_insights'] = [
-                    f"Savings rate: {savings_rate:.1f}%",
-                    f"Monthly savings: ${net_amount:.2f}",
-                    f"Expense-to-income ratio: {(abs(context.total_expenses) / context.total_income * 100):.1f}%"
-                ]
-                
-            # Handle trend questions
-            elif any(word in message_lower for word in ['trend', 'pattern', 'over time', 'monthly', 'weekly']):
-                response['message'] = f"Based on your recent data: ${context.transaction_count} transactions totaling ${abs(context.total_expenses):.2f} in expenses. "
-                if context.top_categories:
-                    top_cat = context.top_categories[0]
-                    response['message'] += f"Your dominant spending pattern is in **{top_cat['category']}** (${abs(top_cat['total_amount']):.2f})."
-                response['suggested_actions'] = ["Compare to previous months", "Set monthly goals", "Track weekly spending"]
-                
             else:
-                response['message'] = "I can help you analyze your spending patterns, savings rate, and financial health. What specific aspect of your finances would you like to explore?"
-                response['suggested_actions'] = ["Ask about top categories", "Check savings rate", "Request expense reduction tips"]
+                response['message'] = "I can help you analyze your spending patterns and financial health. What would you like to know?"
+                response['suggested_actions'] = self._extract_suggested_actions(context)
+                response['financial_insights'] = self._extract_financial_insights(context)
         else:
             response['message'] = "I'd love to help with your financial questions! Connect your financial data so I can provide personalized insights about your spending and savings."
             response['suggested_actions'] = ["Connect financial data", "Ask general financial advice"]
