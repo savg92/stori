@@ -36,7 +36,6 @@ import {
 	useDeleteTransaction,
 } from '../../hooks/useApi';
 import type { TransactionFilters } from '../../types/api';
-import { api } from '../../services/api';
 
 export function TransactionList() {
 	const [searchTerm, setSearchTerm] = useState('');
@@ -72,7 +71,11 @@ export function TransactionList() {
 	const allCategories = [...new Set(transactions.map((t) => t.category))];
 
 	const formatAmount = (amount: number, type: 'income' | 'expense') => {
-		return api.utils.formatAmount(type === 'income' ? amount : -amount);
+		const value = type === 'income' ? amount : -amount;
+		return new Intl.NumberFormat('en-US', {
+			style: 'currency',
+			currency: 'USD',
+		}).format(value);
 	};
 
 	const formatDate = (dateString: string) => {

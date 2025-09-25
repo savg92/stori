@@ -243,7 +243,6 @@ AGENTS.md
 backend_agent.md
 DEVELOPMENT_SUMMARY.md
 DOCKER_SETUP.md
-docker-compose.yml
 mock_expense_and_income.json
 Plan.md
 PRD.md

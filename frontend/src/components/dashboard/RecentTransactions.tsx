@@ -31,7 +31,12 @@ function formatCategory(category: string) {
 }
 
 export function RecentTransactions() {
-	const { data: transactions, isLoading, error } = useRecentTransactions(5);
+	const {
+		data: transactionResponse,
+		isLoading,
+		error,
+	} = useRecentTransactions();
+	const transactions = transactionResponse?.items?.slice(0, 5) || [];
 
 	if (isLoading) {
 		return (
@@ -47,7 +52,7 @@ export function RecentTransactions() {
 		);
 	}
 
-	if (error || !transactions?.items?.length) {
+	if (error || !transactions?.length) {
 		return (
 			<Card className='col-span-4'>
 				<CardHeader>
@@ -69,7 +74,7 @@ export function RecentTransactions() {
 			</CardHeader>
 			<CardContent>
 				<div className='space-y-3'>
-					{transactions.items.map((transaction: Transaction) => (
+					{transactions.map((transaction: Transaction) => (
 						<div
 							key={transaction.id}
 							className='flex items-center space-x-4 p-2 rounded-lg hover:bg-muted/50 transition-colors'

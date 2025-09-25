@@ -2,9 +2,8 @@ import './App.css';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from './components/theme-provider';
 import { AuthProvider } from './hooks/useAuth';
-// TEMPORARY: Commented out for testing without authentication
-// import { useAuth } from './contexts/auth-context';
-// import { LoginForm } from './components/auth/LoginForm';
+import { useAuth } from './contexts/auth-context';
+import { LoginForm } from './components/auth/LoginForm';
 import { AppRouter } from './components/router/AppRouter';
 import { Toaster } from 'sonner';
 
@@ -18,22 +17,20 @@ const queryClient = new QueryClient({
 });
 
 function AppContent() {
-	// TEMPORARY: Bypass authentication for testing
-	// const { user, loading } = useAuth();
+	const { user, loading } = useAuth();
 
-	// if (loading) {
-	// 	return (
-	// 		<div className='min-h-screen flex items-center justify-center'>
-	// 			<div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary'></div>
-	// 		</div>
-	// 	);
-	// }
+	if (loading) {
+		return (
+			<div className='min-h-screen flex items-center justify-center'>
+				<div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary'></div>
+			</div>
+		);
+	}
 
-	// if (!user) {
-	// 	return <LoginForm />;
-	// }
+	if (!user) {
+		return <LoginForm />;
+	}
 
-	// Directly render AppRouter for testing without authentication
 	return <AppRouter />;
 }
 
