@@ -11,26 +11,6 @@ resource "aws_ecr_repository" "backend" {
     scan_on_push = true
   }
 
-  lifecycle_policy {
-    policy = jsonencode({
-      rules = [
-        {
-          rulePriority = 1
-          description  = "Keep last 5 images"
-          selection = {
-            tagStatus     = "tagged"
-            tagPrefixList = ["v"]
-            countType     = "imageCountMoreThan"
-            countNumber   = 5
-          }
-          action = {
-            type = "expire"
-          }
-        }
-      ]
-    })
-  }
-
   tags = {
     Name = "stori-backend-ecr"
   }
@@ -46,26 +26,6 @@ resource "aws_ecr_repository" "frontend" {
 
   image_scanning_configuration {
     scan_on_push = true
-  }
-
-  lifecycle_policy {
-    policy = jsonencode({
-      rules = [
-        {
-          rulePriority = 1
-          description  = "Keep last 5 images"
-          selection = {
-            tagStatus     = "tagged"
-            tagPrefixList = ["v"]
-            countType     = "imageCountMoreThan"
-            countNumber   = 5
-          }
-          action = {
-            type = "expire"
-          }
-        }
-      ]
-    })
   }
 
   tags = {
