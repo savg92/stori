@@ -41,8 +41,24 @@ class AuthMiddleware:
             if not response.user:
                 raise AuthenticationError("Invalid token")
             
+            # Map authenticated user emails to mock data user IDs
+            email_to_user_id = {
+                "alex.johnson@email.com": "user_1_young_professional",
+                "maria.garcia@email.com": "user_2_family_household", 
+                "sam.chen@email.com": "user_3_tech_entrepreneur",
+                "robert.smith@email.com": "user_4_retiree",
+                "priya.patel@email.com": "user_5_college_student"
+            }
+            
+            # Use mock data user ID if email matches, otherwise use real user ID
+            user_email = response.user.email or ""
+            mapped_user_id = email_to_user_id.get(user_email, response.user.id)
+            
+            logger.info(f"🔄 User email: {user_email}")
+            logger.info(f"🔄 Mapped user ID: {mapped_user_id}")
+            
             return {
-                "user_id": response.user.id,
+                "user_id": mapped_user_id,
                 "email": response.user.email,
                 "user_metadata": response.user.user_metadata or {},
                 "app_metadata": response.user.app_metadata or {}

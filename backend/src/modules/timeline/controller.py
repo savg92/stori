@@ -6,9 +6,8 @@ from decimal import Decimal
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from supabase import Client
 
-from services.supabase_service import get_supabase_client
+from services.supabase_service import SupabaseClient, get_supabase_client
 from services.auth_middleware import get_current_user
 from .repository import TimelineRepository
 from .service import TimelineService
@@ -26,7 +25,7 @@ router = APIRouter(prefix="/timeline", tags=["timeline"])
 
 
 def get_timeline_service(
-    supabase_client: Client = Depends(get_supabase_client)
+    supabase_client: SupabaseClient = Depends(get_supabase_client)
 ) -> TimelineService:
     """Dependency to get timeline service."""
     repository = TimelineRepository(supabase_client)

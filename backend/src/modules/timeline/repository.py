@@ -3,9 +3,9 @@
 import logging
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
-from supabase import Client
+from services.supabase_service import SupabaseClient
 
 from core.models import TransactionType
 from .schemas import TimelineFilters, TimelineGrouping
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class TimelineRepository:
     """Repository for timeline data operations."""
     
-    def __init__(self, supabase_client: Client):
+    def __init__(self, supabase_client: SupabaseClient):
         self.supabase = supabase_client
     
     async def get_timeline_data(
@@ -27,7 +27,7 @@ class TimelineRepository:
         """Get timeline data with specified grouping."""
         try:
             # Build base query
-            query = self.supabase.table('transactions').select('*')
+            query = self.supabase.client.table('transactions').select('*')
             
             # Apply user filter
             query = query.eq('user_id', user_id)
@@ -126,7 +126,7 @@ class TimelineRepository:
     ) -> List[Dict]:
         """Get timeline data for a specific category."""
         try:
-            query = (self.supabase.table('transactions')
+            query = (self.supabase.client.table('transactions')
                     .select('*')
                     .eq('user_id', user_id)
                     .eq('category', category)
@@ -182,7 +182,7 @@ class TimelineRepository:
         """Get cash flow data with running balance."""
         try:
             # Get all transactions in date range
-            query = (self.supabase.table('transactions')
+            query = (self.supabase.client.table('transactions')
                     .select('*')
                     .eq('user_id', user_id)
                     .gte('date', start_date.isoformat())
@@ -273,3 +273,19 @@ class TimelineRepository:
             return txn_date.replace(day=1)
         else:  # YEARLY
             return txn_date.replace(month=1, day=1)
+
+    async def get_user_transaction_date_range(self, user_id: str) -> Optional[Tuple[date, date]]:
+        """Get the date range of transactions for a user."""
+        try:
+            # Get the earliest and latest transaction dates
+            response = self.supabase.client.table('transactions').select('date').eq('user_id', user_id).order('date').execute()
+            
+            if not response.data:
+                return None
+                
+            dates = [datetime.fromisoformat(row['date']).date() for row in response.data]
+            return (min(dates), max(dates))
+            
+        except Exception as e:
+            logger.error(f"Error getting user transaction date range: {e}")
+            return None

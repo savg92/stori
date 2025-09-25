@@ -123,8 +123,18 @@ function CustomTimelineTooltip({
 	return null;
 }
 
-export function TimelineChart() {
-	const { data: timelineData, isLoading, error } = useTimelineData();
+export function TimelineChart({
+	startDate,
+	endDate,
+}: {
+	startDate?: string;
+	endDate?: string;
+} = {}) {
+	const {
+		data: timelineData,
+		isLoading,
+		error,
+	} = useTimelineData(startDate, endDate);
 	const [selectedDataPoint, setSelectedDataPoint] =
 		useState<ChartDataPoint | null>(null);
 	const [focusedLine, setFocusedLine] = useState<string | null>(null);
@@ -135,9 +145,9 @@ export function TimelineChart() {
 		return timelineData.data_points.map((point: TimelinePoint) => ({
 			date: point.date,
 			dateFormatted: format(new Date(point.date), 'MMM dd'),
-			income: point.income,
-			expenses: point.expenses,
-			net: point.net_income,
+			income: point.total_income, // Fixed: use total_income from backend
+			expenses: point.total_expenses, // Fixed: use total_expenses from backend
+			net: point.net_amount,
 		}));
 	}, [timelineData]);
 
@@ -204,39 +214,39 @@ export function TimelineChart() {
 										<p className='text-muted-foreground'>Income</p>
 										<p className='font-medium text-green-600'>
 											$
-											{selectedDataPoint.income.toLocaleString('en-US', {
+											{selectedDataPoint?.income?.toLocaleString('en-US', {
 												minimumFractionDigits: 2,
 												maximumFractionDigits: 2,
-											})}
+											}) ?? '0.00'}
 										</p>
 									</div>
 									<div className='space-y-1'>
 										<p className='text-muted-foreground'>Expenses</p>
 										<p className='font-medium text-red-600'>
 											$
-											{selectedDataPoint.expenses.toLocaleString('en-US', {
+											{selectedDataPoint?.expenses?.toLocaleString('en-US', {
 												minimumFractionDigits: 2,
 												maximumFractionDigits: 2,
-											})}
+											}) ?? '0.00'}
 										</p>
 									</div>
 									<div className='space-y-1'>
 										<p className='text-muted-foreground'>Net Income</p>
 										<div className='flex items-center gap-1'>
-											{selectedDataPoint.net > 0 ? (
+											{(selectedDataPoint?.net ?? 0) > 0 ? (
 												<TrendingUp className='h-3 w-3 text-green-500' />
 											) : (
 												<TrendingDown className='h-3 w-3 text-red-500' />
 											)}
 											<p
 												className={`font-bold ${
-													selectedDataPoint.net > 0
+													(selectedDataPoint?.net ?? 0) > 0
 														? 'text-green-600'
 														: 'text-red-600'
 												}`}
 											>
 												$
-												{Math.abs(selectedDataPoint.net).toLocaleString(
+												{Math.abs(selectedDataPoint?.net ?? 0).toLocaleString(
 													'en-US',
 													{
 														minimumFractionDigits: 2,

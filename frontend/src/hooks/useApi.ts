@@ -7,8 +7,8 @@ import type {
 	CreateTransactionRequest,
 	UpdateTransactionRequest,
 	TransactionQuery,
-	TransactionFilters,
 	AIAdviceRequest,
+	AIAdviceResponse,
 	TransactionListResponse,
 } from '../types/api';
 
@@ -210,7 +210,10 @@ export const useAIAdvice = () => {
 	});
 };
 
-export const useAIChat = () => {
+export const useAIChat = (options?: {
+	onSuccess?: (response: AIAdviceResponse) => void;
+	onError?: (error: Error) => void;
+}) => {
 	return useMutation({
 		mutationFn: ({
 			message,
@@ -219,8 +222,13 @@ export const useAIChat = () => {
 			message: string;
 			sessionId?: string;
 		}) => api.ai.chat(message, sessionId),
+		onSuccess: options?.onSuccess,
 		onError: (error: Error) => {
-			toast.error(error.message || 'Failed to send message');
+			if (options?.onError) {
+				options.onError(error);
+			} else {
+				toast.error(error.message || 'Failed to send message');
+			}
 		},
 	});
 };
@@ -259,9 +267,14 @@ export const useRecentTransactions = () => {
 	return useTransactions();
 };
 
-// Hook for transaction filters (for transaction list page)
-export const useTransactionFilters = (_filters: TransactionFilters) => {
-	return useTransactions();
+// Hook for filtered transaction lists
+export const useTransactionFilters = (filters: TransactionQuery) => {
+	return useQuery({
+		queryKey: queryKeys.transactions.list(filters),
+		queryFn: () => api.transactions.list(filters),
+		staleTime: 5 * 60 * 1000,
+		refetchOnWindowFocus: false,
+	});
 };
 
 // Optimistic update utilities

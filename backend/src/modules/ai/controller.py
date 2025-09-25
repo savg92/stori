@@ -4,9 +4,8 @@ import logging
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
-from supabase import Client
 
-from services.supabase_service import get_supabase_client
+from services.supabase_service import SupabaseClient, get_supabase_client
 from services.auth_middleware import get_current_user
 from services.real_data_service import RealDataService
 from providers.llms import LLMProviderFactory
@@ -32,7 +31,7 @@ def get_llm_provider():
 
 
 def get_ai_service(
-    supabase_client: Client = Depends(get_supabase_client),
+    supabase_client: SupabaseClient = Depends(get_supabase_client),
     llm_provider=Depends(get_llm_provider)
 ) -> AIService:
     """Dependency to get AI service."""
@@ -379,10 +378,10 @@ async def test_database_integration():
 
 # Real data endpoints (no authentication for testing)
 @router.get("/live/users")
-async def get_available_users(supabase: Client = Depends(get_supabase_client)):
+async def get_available_users(supabase: SupabaseClient = Depends(get_supabase_client)):
     """Get list of available users in the database."""
     try:
-        data_service = RealDataService(supabase)
+        data_service = RealDataService(supabase.client)
         users = await data_service.get_available_users()
         return {
             "users": users,
@@ -398,11 +397,11 @@ async def get_available_users(supabase: Client = Depends(get_supabase_client)):
 async def get_live_financial_summary(
     user_id: str,
     days: int = 30,
-    supabase: Client = Depends(get_supabase_client)
+    supabase: SupabaseClient = Depends(get_supabase_client)
 ):
     """Get live financial summary for a specific user."""
     try:
-        data_service = RealDataService(supabase)
+        data_service = RealDataService(supabase.client)
         summary = await data_service.get_financial_summary(user_id, days)
         
         if summary['transaction_count'] == 0:
@@ -426,11 +425,11 @@ async def get_live_financial_summary(
 async def live_chat_with_ai(
     user_id: str,
     request: ChatRequest,
-    supabase: Client = Depends(get_supabase_client)
+    supabase: SupabaseClient = Depends(get_supabase_client)
 ):
     """AI chat using real user data."""
     try:
-        data_service = RealDataService(supabase)
+        data_service = RealDataService(supabase.client)
         
         # Get user's real financial data
         summary = await data_service.get_financial_summary(user_id, 90)
@@ -555,11 +554,11 @@ You have {summary['transaction_count']} transactions in our records."""
 async def get_live_spending_trends(
     user_id: str,
     days: int = 90,
-    supabase: Client = Depends(get_supabase_client)
+    supabase: SupabaseClient = Depends(get_supabase_client)
 ):
     """Get live spending trends for a user."""
     try:
-        data_service = RealDataService(supabase)
+        data_service = RealDataService(supabase.client)
         trends = await data_service.get_spending_trends(user_id, days)
         
         return {

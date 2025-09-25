@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { TrendingUp, TrendingDown, DollarSign, CreditCard } from 'lucide-react';
 import { ExpenseChart } from '@/components/charts/ExpenseChart';
 import { TimelineChart } from '@/components/charts/TimelineChart';
 import { RecentTransactions } from './RecentTransactions';
-import { useCurrentMonthSummary } from '@/hooks/useApi';
+import { DateRangePicker } from '@/components/ui/date-range-picker';
+import { useExpenseSummary } from '@/hooks/useApi';
 
 interface StatCardProps {
 	title: string;
@@ -57,39 +59,60 @@ function StatCard({
 }
 
 export function DashboardOverview() {
-	const { data: summaryData } = useCurrentMonthSummary();
+	// Date filtering state
+	const [dateRange, setDateRange] = useState<{
+		startDate?: string;
+		endDate?: string;
+		label: string;
+	}>({
+		label: 'All 2024 data',
+	});
+
+	const { data: summaryData } = useExpenseSummary(
+		dateRange.startDate,
+		dateRange.endDate
+	);
+
+	// Handle date range changes from DateRangePicker
+	const handleRangeChange = (range: { start: string; end: string; label: string }) => {
+		setDateRange({
+			startDate: range.start,
+			endDate: range.end,
+			label: range.label,
+		});
+	};
 
 	// Use API data when available, fallback to demo data
 	const stats = summaryData
 		? [
 				{
 					title: 'Total Balance',
-					value: `$${summaryData.net_income.toFixed(2)}`,
-					description: 'current balance',
+					value: `$${summaryData.net_amount.toFixed(2)}`,
+					description: 'available data',
 					icon: DollarSign,
 					trend:
-						summaryData.net_income > 0 ? ('up' as const) : ('down' as const),
+						summaryData.net_amount > 0 ? ('up' as const) : ('down' as const),
 				},
 				{
 					title: 'Monthly Income',
 					value: `$${summaryData.total_income.toFixed(2)}`,
-					description: 'this month',
+					description: 'available data',
 					icon: TrendingUp,
 					trend: 'up' as const,
 				},
 				{
 					title: 'Monthly Expenses',
 					value: `$${summaryData.total_expenses.toFixed(2)}`,
-					description: 'this month',
+					description: 'available data',
 					icon: TrendingDown,
 					trend: 'down' as const,
 				},
 				{
 					title: 'Transaction Count',
-					value: summaryData.expense_categories
+					value: summaryData.category_breakdown
 						.reduce((sum, cat) => sum + cat.transaction_count, 0)
 						.toString(),
-					description: 'this month',
+					description: 'available data',
 					icon: CreditCard,
 					trend: 'up' as const,
 				},
@@ -131,11 +154,16 @@ export function DashboardOverview() {
 
 	return (
 		<div className='space-y-6'>
-			<div>
-				<h1 className='text-3xl font-bold tracking-tight'>Dashboard</h1>
-				<p className='text-muted-foreground'>
-					Welcome back! Here's an overview of your financial activity.
-				</p>
+			<div className='flex items-center justify-between'>
+				<div>
+					<h1 className='text-3xl font-bold tracking-tight'>Dashboard</h1>
+					<p className='text-muted-foreground'>
+						Welcome back! Here's an overview of your financial activity.
+					</p>
+				</div>
+				<DateRangePicker
+					onRangeChange={handleRangeChange}
+				/>
 			</div>
 
 			<div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4'>
@@ -149,11 +177,17 @@ export function DashboardOverview() {
 
 			<div className='grid gap-4 md:grid-cols-2 lg:grid-cols-7'>
 				<RecentTransactions />
-				<ExpenseChart />
+				<ExpenseChart 
+					startDate={dateRange.startDate}
+					endDate={dateRange.endDate}
+				/>
 			</div>
 
 			<div className='grid gap-4'>
-				<TimelineChart />
+				<TimelineChart 
+					startDate={dateRange.startDate}
+					endDate={dateRange.endDate}
+				/>
 			</div>
 		</div>
 	);

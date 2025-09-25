@@ -5,7 +5,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import Dict, List, Optional
 
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, field_validator, field_serializer
 
 
 class TimelineGrouping(str, Enum):
@@ -28,6 +28,11 @@ class TimelineDataPoint(BaseModel):
     largest_expense: Optional[Decimal] = None
     largest_income: Optional[Decimal] = None
 
+    @field_serializer('total_income', 'total_expenses', 'net_amount', 'largest_expense', 'largest_income')
+    def serialize_decimal(self, value: Optional[Decimal]) -> Optional[float]:
+        """Convert Decimal to float for JSON serialization."""
+        return float(value) if value is not None else None
+
 
 class CategoryTimelinePoint(BaseModel):
     """Timeline point with category breakdown."""
@@ -38,6 +43,11 @@ class CategoryTimelinePoint(BaseModel):
     amount: Decimal
     transaction_count: int
     avg_amount: Decimal
+
+    @field_serializer('amount', 'avg_amount')
+    def serialize_decimal(self, value: Decimal) -> float:
+        """Convert Decimal to float for JSON serialization."""
+        return float(value)
 
 
 class TimelineResponse(BaseModel):

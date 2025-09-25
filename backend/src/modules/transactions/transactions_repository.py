@@ -43,7 +43,7 @@ class TransactionsRepository:
             }
             
             # Insert into database
-            result = self.db.create_transaction(user_id, db_data)
+            result = await self.db.create_transaction(db_data)
             
             # Convert back to response model
             return Transaction(**result)
@@ -75,7 +75,7 @@ class TransactionsRepository:
                 filters["end_date"] = query.end_date.isoformat()
                 
             # Get transactions from database
-            transactions = self.db.get_transactions(
+            transactions = await self.db.get_transactions(
                 user_id=user_id,
                 filters=filters,
                 limit=query.limit,
@@ -96,7 +96,7 @@ class TransactionsRepository:
     ) -> Optional[Transaction]:
         """Get a specific transaction by ID."""
         try:
-            transaction = self.db.get_transaction_by_id(user_id, transaction_id)
+            transaction = await self.db.get_transaction_by_id(user_id, transaction_id)
             
             if transaction:
                 return Transaction(**transaction)
@@ -131,7 +131,7 @@ class TransactionsRepository:
             db_update["updated_at"] = datetime.utcnow().isoformat()
             
             # Update in database
-            updated = self.db.update_transaction(user_id, transaction_id, db_update)
+            updated = await self.db.update_transaction(transaction_id, db_update)
             
             if updated:
                 return Transaction(**updated)
@@ -148,7 +148,7 @@ class TransactionsRepository:
     ) -> bool:
         """Delete a transaction."""
         try:
-            return self.db.delete_transaction(user_id, transaction_id)
+            return await self.db.delete_transaction(transaction_id)
             
         except Exception as e:
             logger.error(f"Failed to delete transaction {transaction_id}: {e}")
@@ -170,17 +170,13 @@ class TransactionsRepository:
             if query.category:
                 filters["category"] = query.category
                 
-            date_filters = {}
+            # Apply date range filtering
             if query.start_date:
-                date_filters["gte"] = query.start_date.isoformat()
+                filters["start_date"] = query.start_date.isoformat()
             if query.end_date:
-                date_filters["lte"] = query.end_date.isoformat()
+                filters["end_date"] = query.end_date.isoformat()
                 
-            return self.db.count_transactions(
-                user_id=user_id,
-                filters=filters,
-                date_range=date_filters
-            )
+            return await self.db.count_transactions(user_id, filters)
             
         except Exception as e:
             logger.error(f"Failed to count transactions: {e}")

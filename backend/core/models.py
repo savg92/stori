@@ -4,7 +4,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
 from typing import Dict, Any, List, Optional
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, validator, field_serializer
 
 
 class TransactionType(str, Enum):
@@ -68,6 +68,11 @@ class TransactionBase(BaseModel):
                 raise ValueError("Income amounts should be positive")
         return v
 
+    @field_serializer('amount')
+    def serialize_decimal(self, value: Decimal) -> float:
+        """Convert Decimal to float for JSON serialization."""
+        return float(value)
+
 
 class TransactionCreate(TransactionBase):
     """Model for creating a new transaction."""
@@ -78,8 +83,14 @@ class TransactionUpdate(BaseModel):
     """Model for updating an existing transaction."""
     amount: Optional[Decimal] = Field(None, description="Transaction amount")
     description: Optional[str] = Field(None, min_length=1, max_length=255)
-    category: Optional[str] = None
-    transaction_date: Optional[date] = Field(None, alias="date")
+    category: Optional[str] = Field(None, description="Transaction category")
+    type: Optional[TransactionType] = Field(None, description="Transaction type")
+    transaction_date: Optional[date] = Field(None, description="Transaction date", alias="date")
+
+    @field_serializer('amount')
+    def serialize_decimal(self, value: Optional[Decimal]) -> Optional[float]:
+        """Convert Decimal to float for JSON serialization."""
+        return float(value) if value is not None else None
 
 
 class Transaction(TransactionBase):
@@ -101,6 +112,11 @@ class CategorySummary(BaseModel):
     percentage: float = Field(..., ge=0, le=100)
     transaction_count: int = Field(..., ge=0)
 
+    @field_serializer('total_amount')
+    def serialize_decimal(self, value: Decimal) -> float:
+        """Convert Decimal to float for JSON serialization."""
+        return float(value)
+
 
 class ExpenseSummaryResponse(BaseModel):
     """Response model for expense summary."""
@@ -112,6 +128,11 @@ class ExpenseSummaryResponse(BaseModel):
     period_start: date
     period_end: date
 
+    @field_serializer('total_expenses', 'total_income', 'net_income')
+    def serialize_decimal(self, value: Decimal) -> float:
+        """Convert Decimal to float for JSON serialization."""
+        return float(value)
+
 
 # Timeline Models
 class TimelineEntry(BaseModel):
@@ -121,6 +142,11 @@ class TimelineEntry(BaseModel):
     total_expenses: Decimal
     net_amount: Decimal
     transaction_count: int
+
+    @field_serializer('total_income', 'total_expenses', 'net_amount')
+    def serialize_decimal(self, value: Decimal) -> float:
+        """Convert Decimal to float for JSON serialization."""
+        return float(value)
 
 
 class TimelineResponse(BaseModel):
@@ -132,6 +158,11 @@ class TimelineResponse(BaseModel):
     total_expenses: Decimal
     average_monthly_income: Decimal
     average_monthly_expenses: Decimal
+
+    @field_serializer('total_income', 'total_expenses', 'average_monthly_income', 'average_monthly_expenses')
+    def serialize_decimal(self, value: Decimal) -> float:
+        """Convert Decimal to float for JSON serialization."""
+        return float(value)
 
 
 # AI Advisor Models
@@ -190,9 +221,12 @@ class TransactionQuery(DateRangeQuery):
 # Response Models
 class TransactionListResponse(BaseModel):
     """Response model for transaction lists."""
-    transactions: List[Transaction]
-    total_count: int
-    has_more: bool
+    items: List[Transaction]
+    total: int
+    limit: int
+    offset: int
+    has_next: bool
+    has_previous: bool
 
 
 class HealthCheckResponse(BaseModel):

@@ -359,7 +359,9 @@ test.describe('Complete User Journey - Alex Johnson', () => {
 			console.log(
 				'⚠️  No logout option found - checking if session management is implemented'
 			);
-			console.log('ℹ️  User session may persist (this is acceptable for current development phase)');
+			console.log(
+				'ℹ️  User session may persist (this is acceptable for current development phase)'
+			);
 		}
 
 		// ==========================================

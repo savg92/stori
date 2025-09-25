@@ -92,18 +92,22 @@ export type TransactionListResponse = PaginatedResponse<Transaction>;
 export interface ExpenseSummary {
 	total_expenses: number;
 	total_income: number;
-	net_income: number;
-	expense_categories: CategorySummary[];
-	income_categories: CategorySummary[];
-	period_start: string;
-	period_end: string;
+	net_amount: number; // Changed from net_income to match backend
+	category_breakdown: CategorySummary[]; // Changed from expense_categories to match backend
+	transaction_count: number; // Added to match backend
+	period: string; // Added to match backend
+	date_range: {
+		// Changed from period_start/period_end to match backend
+		start_date: string;
+		end_date: string;
+	};
 }
 
 export interface CategorySummary {
 	category: string;
 	total_amount: number;
 	transaction_count: number;
-	percentage: number;
+	percentage_of_total: number; // Changed from percentage to match backend
 	avg_amount: number;
 }
 
@@ -117,16 +121,16 @@ export interface TimelineData {
 
 export interface TimelinePoint {
 	date: string;
-	income: number;
-	expenses: number;
-	net_income: number;
+	total_income: number; // Changed from income to match backend
+	total_expenses: number; // Changed from expenses to match backend
+	net_amount: number; // Changed from net_income to match backend
 	transaction_count: number;
 }
 
 export interface TimelineSummary {
 	total_income: number;
 	total_expenses: number;
-	net_income: number;
+	net_amount: number; // Changed from net_income to match backend
 	avg_monthly_income: number;
 	avg_monthly_expenses: number;
 	best_month: string;
@@ -141,15 +145,21 @@ export interface AIAdviceRequest {
 }
 
 export interface AIAdviceResponse {
-	response: string;
-	confidence: number;
-	context_used: {
+	message?: string; // From modular AI endpoint
+	response?: string; // From simple AI endpoint (fallback)
+	confidence_score?: number; // From modular AI endpoint
+	confidence?: number; // From simple AI endpoint (fallback)
+	conversation_id?: string; // From modular AI endpoint
+	session_id?: string; // From simple AI endpoint (fallback)
+	suggested_actions?: string[]; // From modular AI endpoint
+	suggestions?: string[]; // From simple AI endpoint (fallback)
+	financial_insights?: string[]; // From modular AI endpoint
+	context_used?: {
+		// From simple AI endpoint (fallback)
 		transaction_count: number;
 		date_range: string;
 		categories_analyzed: string[];
 	};
-	suggestions: string[];
-	session_id: string;
 }
 
 // Error response from backend
@@ -259,7 +269,7 @@ export interface MonthlyComparison {
 export interface MonthData {
 	total_income: number;
 	total_expenses: number;
-	net_income: number;
+	net_amount: number; // Changed from net_income to match backend
 	transaction_count: number;
 	top_category: string;
 }

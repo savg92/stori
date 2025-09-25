@@ -5,7 +5,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Dict, List, Optional, Tuple
 
-from supabase import Client
+from services.supabase_service import SupabaseClient
 
 from core.models import Transaction, TransactionType
 from .schemas import ExpenseFilters, ExpensePeriod
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class ExpenseRepository:
     """Repository for expense data operations."""
     
-    def __init__(self, supabase_client: Client):
+    def __init__(self, supabase_client: SupabaseClient):
         self.supabase = supabase_client
     
     async def get_expense_summary(
@@ -27,7 +27,7 @@ class ExpenseRepository:
         """Get expense summary with category breakdown."""
         try:
             # Build base query
-            query = self.supabase.table('transactions').select('*')
+            query = self.supabase.client.table('transactions').select('*')
             
             # Apply user filter
             query = query.eq('user_id', user_id)
@@ -95,7 +95,7 @@ class ExpenseRepository:
     ) -> List[Dict]:
         """Get expense trends grouped by time period."""
         try:
-            query = (self.supabase.table('transactions')
+            query = (self.supabase.client.table('transactions')
                     .select('*')
                     .eq('user_id', user_id)
                     .eq('type', TransactionType.EXPENSE.value)
@@ -155,7 +155,7 @@ class ExpenseRepository:
     ) -> List[Dict]:
         """Get top expense categories by total amount."""
         try:
-            query = (self.supabase.table('transactions')
+            query = (self.supabase.client.table('transactions')
                     .select('*')
                     .eq('user_id', user_id)
                     .eq('type', TransactionType.EXPENSE.value))
@@ -196,3 +196,19 @@ class ExpenseRepository:
         except Exception as e:
             logger.error(f"Error getting top categories: {e}")
             raise
+
+    async def get_user_transaction_date_range(self, user_id: str) -> Optional[Tuple[date, date]]:
+        """Get the date range of transactions for a user."""
+        try:
+            # Get the earliest and latest transaction dates
+            response = self.supabase.client.table('transactions').select('date').eq('user_id', user_id).order('date').execute()
+            
+            if not response.data:
+                return None
+                
+            dates = [datetime.fromisoformat(row['date']).date() for row in response.data]
+            return (min(dates), max(dates))
+            
+        except Exception as e:
+            logger.error(f"Error getting user transaction date range: {e}")
+            return None

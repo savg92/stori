@@ -3,7 +3,7 @@
 import logging
 from decimal import Decimal
 from datetime import date, timedelta
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 from .repository import TimelineRepository
 from .schemas import (
@@ -35,15 +35,28 @@ class TimelineService:
         try:
             # Set default date range if not provided
             if not filters.start_date or not filters.end_date:
-                end_date = date.today()
-                if filters.grouping == TimelineGrouping.DAILY:
-                    start_date = end_date - timedelta(days=30)  # Last 30 days
-                elif filters.grouping == TimelineGrouping.WEEKLY:
-                    start_date = end_date - timedelta(weeks=12)  # Last 12 weeks
-                elif filters.grouping == TimelineGrouping.MONTHLY:
-                    start_date = end_date - timedelta(days=365)  # Last year
-                else:  # YEARLY
-                    start_date = end_date - timedelta(days=365 * 5)  # Last 5 years
+                # Get the user's actual transaction date range
+                date_range = await self.repository.get_user_transaction_date_range(user_id)
+                
+                if date_range:
+                    earliest_date, latest_date = date_range
+                    
+                    # Set end date to the latest available transaction
+                    end_date = latest_date
+                    
+                    # Set start date based on grouping from the latest transaction
+                    if filters.grouping == TimelineGrouping.DAILY:
+                        start_date = max(end_date - timedelta(days=30), earliest_date)  # Last 30 days
+                    elif filters.grouping == TimelineGrouping.WEEKLY:
+                        start_date = max(end_date - timedelta(weeks=12), earliest_date)  # Last 12 weeks
+                    elif filters.grouping == TimelineGrouping.MONTHLY:
+                        start_date = max(end_date - timedelta(days=365), earliest_date)  # Last year
+                    else:  # YEARLY
+                        start_date = max(end_date - timedelta(days=365 * 5), earliest_date)  # Last 5 years
+                else:
+                    # Fallback to current date if no transactions found
+                    end_date = date.today()
+                    start_date = end_date - timedelta(days=30)
                 
                 filters.start_date = filters.start_date or start_date
                 filters.end_date = filters.end_date or end_date

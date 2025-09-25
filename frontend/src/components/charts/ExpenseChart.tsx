@@ -25,14 +25,16 @@ import { Loader2, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const COLORS = [
-	'#0088FE',
-	'#00C49F',
-	'#FFBB28',
-	'#FF8042',
-	'#8884D8',
-	'#82CA9D',
-	'#FFC658',
-	'#FF7C7C',
+	'#E53E3E', // Red for high expenses
+	'#FF8C42', // Orange for moderate expenses
+	'#FFA726', // Amber for regular expenses
+	'#66BB6A', // Green for lower expenses
+	'#42A5F5', // Blue for utilities
+	'#AB47BC', // Purple for entertainment
+	'#8D6E63', // Brown for food/groceries
+	'#FF7043', // Deep orange for transportation
+	'#EC407A', // Pink for shopping
+	'#5C6BC0', // Indigo for healthcare
 ];
 
 // Format category names for display
@@ -47,7 +49,7 @@ interface ChartDataItem {
 	name: string;
 	value: number;
 	amount: number;
-	percentage: number;
+	percentage: number; // This maps to backend's percentage_of_total
 	color: string;
 	transactionCount?: number;
 }
@@ -101,27 +103,36 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
 	return null;
 }
 
-export function ExpenseChart() {
-	const { data: expenseData, isLoading, error } = useExpenseSummary();
+export function ExpenseChart({
+	startDate,
+	endDate,
+}: {
+	startDate?: string;
+	endDate?: string;
+} = {}) {
+	const {
+		data: expenseData,
+		isLoading,
+		error,
+	} = useExpenseSummary(startDate, endDate);
 	const [activeIndex, setActiveIndex] = useState<number | null>(null);
 	const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
 	const chartData = useMemo(() => {
-		if (!expenseData?.expense_categories) return [];
+		if (!expenseData?.category_breakdown) return [];
 
-		const total = expenseData.expense_categories.reduce(
-			(sum: number, cat) => sum + cat.total_amount,
-			0
+		const data = expenseData.category_breakdown.map(
+			(category, index: number) => ({
+				name: formatCategoryName(category.category),
+				value: Math.abs(category.total_amount), // Use absolute value for pie chart
+				amount: category.total_amount,
+				percentage: category.percentage_of_total, // Use backend calculated percentage
+				color: COLORS[index % COLORS.length],
+				transactionCount: category.transaction_count,
+			})
 		);
 
-		return expenseData.expense_categories.map((category, index: number) => ({
-			name: formatCategoryName(category.category),
-			value: category.total_amount,
-			amount: category.total_amount,
-			percentage: total > 0 ? (category.total_amount / total) * 100 : 0,
-			color: COLORS[index % COLORS.length],
-			transactionCount: category.transaction_count,
-		}));
+		return data;
 	}, [expenseData]);
 
 	// Event handlers for interactivity
@@ -165,7 +176,7 @@ export function ExpenseChart() {
 		);
 	}
 
-	if (error || !chartData.length) {
+	if (error) {
 		return (
 			<Card className='col-span-3'>
 				<CardHeader>
@@ -175,7 +186,25 @@ export function ExpenseChart() {
 					</CardDescription>
 				</CardHeader>
 				<CardContent className='flex items-center justify-center h-64 text-muted-foreground'>
-					{error ? 'Failed to load expense data' : 'No expense data available'}
+					Failed to load expense data: {error?.message || 'Unknown error'}
+				</CardContent>
+			</Card>
+		);
+	}
+
+	if (!chartData.length) {
+		return (
+			<Card className='col-span-3'>
+				<CardHeader>
+					<CardTitle>Expense Analytics</CardTitle>
+					<CardDescription>
+						Breakdown of your expenses by category
+					</CardDescription>
+				</CardHeader>
+				<CardContent className='flex items-center justify-center h-64 text-muted-foreground'>
+					No expense data available. Chart data length: {chartData.length},
+					Expense data exists: {expenseData ? 'Yes' : 'No'}, Category breakdown
+					length: {expenseData?.category_breakdown?.length || 0}
 				</CardContent>
 			</Card>
 		);
@@ -253,19 +282,20 @@ export function ExpenseChart() {
 						value='pie'
 						className='mt-4'
 					>
-						<div className='h-64 sm:h-80 touch-manipulation'>
+						<div className='h-96 sm:h-[400px] w-full'>
 							<ResponsiveContainer
 								width='100%'
 								height='100%'
-								minHeight={200}
+								minHeight={350}
+								minWidth={300}
 							>
 								<PieChart>
 									<Pie
 										data={chartData}
 										cx='50%'
 										cy='50%'
-										innerRadius={30}
-										outerRadius={activeIndex !== null ? 85 : 75}
+										innerRadius={40}
+										outerRadius={140}
 										paddingAngle={2}
 										dataKey='value'
 										onClick={handlePieClick}

@@ -5,9 +5,8 @@ from datetime import date
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from supabase import Client
 
-from services.supabase_service import get_supabase_client
+from services.supabase_service import SupabaseClient, get_supabase_client
 from services.auth_middleware import get_current_user
 from .repository import ExpenseRepository
 from .service import ExpenseService
@@ -25,7 +24,7 @@ router = APIRouter(prefix="/expenses", tags=["expenses"])
 
 
 def get_expense_service(
-    supabase_client: Client = Depends(get_supabase_client)
+    supabase_client: SupabaseClient = Depends(get_supabase_client)
 ) -> ExpenseService:
     """Dependency to get expense service."""
     repository = ExpenseRepository(supabase_client)

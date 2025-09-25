@@ -36,7 +36,7 @@ class SupabaseClient:
             
             client = create_client(
                 supabase_url=self._settings.supabase_url,
-                supabase_key=self._settings.supabase_key,
+                supabase_key=self._settings.supabase_service_key,  # Use service role key for full access
                 options=options
             )
             
@@ -69,7 +69,7 @@ class SupabaseClient:
     async def create_transaction(self, transaction_data: Dict[str, Any]) -> Dict[str, Any]:
         """Create a new transaction."""
         try:
-            response = await self.client.table('transactions').insert(transaction_data).execute()
+            response = self.client.table('transactions').insert(transaction_data).execute()
             return response.data[0] if response.data else {}
         except APIError as e:
             logger.error(f"Failed to create transaction: {e}")
@@ -88,9 +88,9 @@ class SupabaseClient:
             
             if filters:
                 if 'start_date' in filters:
-                    query = query.gte('transaction_date', filters['start_date'])
+                    query = query.gte('date', filters['start_date'])
                 if 'end_date' in filters:
-                    query = query.lte('transaction_date', filters['end_date'])
+                    query = query.lte('date', filters['end_date'])
                 if 'transaction_type' in filters:
                     query = query.eq('type', filters['transaction_type'])
                 if 'category' in filters:
@@ -102,16 +102,55 @@ class SupabaseClient:
             if offset is not None:
                 query = query.offset(offset)
             
-            # Order by transaction_date desc for consistent pagination
-            query = query.order('transaction_date', desc=True)
+            # Order by date desc for consistent pagination
+            query = query.order('date', desc=True)
             
-            response = await query.execute()
+            response = query.execute()
+            logger.info(f"🔍 Supabase Service - Raw response: {response}")
+            logger.info(f"🔍 Supabase Service - Response data: {response.data}")
+            logger.info(f"🔍 Supabase Service - Response count: {response.count}")
+            
             return response.data or []
             
         except APIError as e:
             logger.error(f"Failed to get transactions: {e}")
             raise
     
+    async def get_transaction_by_id(self, user_id: str, transaction_id: str) -> Optional[Dict[str, Any]]:
+        """Get a specific transaction by ID for a user."""
+        try:
+            response = self.client.table('transactions')\
+                .select('*')\
+                .eq('id', transaction_id)\
+                .eq('user_id', user_id)\
+                .execute()
+            return response.data[0] if response.data else None
+        except APIError as e:
+            logger.error(f"Failed to get transaction by ID: {e}")
+            raise
+    
+    async def count_transactions(self, user_id: str, filters: Optional[Dict[str, Any]] = None) -> int:
+        """Count transactions for a user with optional filters."""
+        try:
+            query = self.client.table('transactions').select('id').eq('user_id', user_id)
+            
+            if filters:
+                if 'start_date' in filters:
+                    query = query.gte('date', filters['start_date'])
+                if 'end_date' in filters:
+                    query = query.lte('date', filters['end_date'])
+                if 'transaction_type' in filters:
+                    query = query.eq('type', filters['transaction_type'])
+                if 'category' in filters:
+                    query = query.eq('category', filters['category'])
+            
+            response = query.execute()
+            return len(response.data) if response.data else 0
+            
+        except APIError as e:
+            logger.error(f"Failed to count transactions: {e}")
+            raise
+
     async def update_transaction(
         self, 
         transaction_id: str, 
@@ -119,7 +158,7 @@ class SupabaseClient:
     ) -> Dict[str, Any]:
         """Update an existing transaction."""
         try:
-            response = await self.client.table('transactions')\
+            response = self.client.table('transactions')\
                 .update(update_data)\
                 .eq('id', transaction_id)\
                 .execute()
@@ -131,7 +170,7 @@ class SupabaseClient:
     async def delete_transaction(self, transaction_id: str) -> bool:
         """Delete a transaction."""
         try:
-            await self.client.table('transactions')\
+            self.client.table('transactions')\
                 .delete()\
                 .eq('id', transaction_id)\
                 .execute()
@@ -176,7 +215,7 @@ class SupabaseClient:
     async def get_user_profile(self, user_id: str) -> Optional[Dict[str, Any]]:
         """Get user profile information."""
         try:
-            response = await self.client.table('users')\
+            response = self.client.table('users')\
                 .select('*')\
                 .eq('id', user_id)\
                 .execute()
@@ -188,7 +227,7 @@ class SupabaseClient:
     async def create_user_profile(self, user_data: Dict[str, Any]) -> Dict[str, Any]:
         """Create a new user profile."""
         try:
-            response = await self.client.table('users').insert(user_data).execute()
+            response = self.client.table('users').insert(user_data).execute()
             return response.data[0] if response.data else {}
         except APIError as e:
             logger.error(f"Failed to create user profile: {e}")

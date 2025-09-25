@@ -53,17 +53,29 @@ class TransactionsService:
     ) -> TransactionListResponse:
         """Get paginated transactions with metadata."""
         try:
+            # Debug logging
+            logger.info(f"🔍 Transactions Service - Querying for user_id: {user_id}")
+            logger.info(f"🔍 Transactions Service - Query: {query}")
+            
             # Get transactions and total count in parallel
             transactions = await self.repository.get_transactions(user_id, query)
             total_count = await self.repository.count_transactions(user_id, query)
             
+            # Debug logging
+            logger.info(f"🔍 Transactions Service - Found {len(transactions)} transactions")
+            logger.info(f"🔍 Transactions Service - Total count: {total_count}")
+            
             # Calculate pagination metadata
-            has_more = len(transactions) == query.limit
+            has_next = len(transactions) == query.limit
+            has_previous = query.offset > 0
             
             return TransactionListResponse(
-                transactions=transactions,
-                total_count=total_count,
-                has_more=has_more
+                items=transactions,
+                total=total_count,
+                limit=query.limit,
+                offset=query.offset,
+                has_next=has_next,
+                has_previous=has_previous
             )
             
         except Exception as e:

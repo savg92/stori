@@ -33,7 +33,35 @@ export function AIChat() {
 	const [inputMessage, setInputMessage] = useState('');
 	const scrollAreaRef = useRef<HTMLDivElement>(null);
 
-	const { mutate: sendMessage, isPending } = useAIChat();
+	const { mutate: sendMessage, isPending } = useAIChat({
+		onSuccess: (response) => {
+			// Debug log to see what we're getting
+			console.log('AI Response received:', response);
+
+			// Add AI response to messages
+			const aiMessage: Message = {
+				id: crypto.randomUUID(),
+				content: response.response || response.message || 'Empty response', // Handle both possible field names
+				isUser: false,
+				timestamp: new Date(),
+			};
+			setMessages((prev) => [...prev, aiMessage]);
+		},
+		onError: (error) => {
+			// Debug log to see errors
+			console.error('AI Chat error:', error);
+
+			// Add error message to chat
+			const errorMessage: Message = {
+				id: crypto.randomUUID(),
+				content:
+					"Sorry, I'm having trouble processing your request right now. Please try again later.",
+				isUser: false,
+				timestamp: new Date(),
+			};
+			setMessages((prev) => [...prev, errorMessage]);
+		},
+	});
 
 	const suggestedPrompts = [
 		'How can I reduce my monthly expenses?',
@@ -70,6 +98,19 @@ export function AIChat() {
 		sendMessage({ message: inputMessage });
 		setInputMessage('');
 	};
+
+	const handleSuggestedPrompt = (prompt: string) => {
+		const userMessage: Message = {
+			id: crypto.randomUUID(),
+			content: prompt,
+			isUser: true,
+			timestamp: new Date(),
+		};
+
+		setMessages((prev) => [...prev, userMessage]);
+		sendMessage({ message: prompt });
+	};
+
 	const handleKeyPress = (e: React.KeyboardEvent) => {
 		if (e.key === 'Enter' && !e.shiftKey) {
 			e.preventDefault();
@@ -181,7 +222,7 @@ export function AIChat() {
 									key={index}
 									variant='outline'
 									size='sm'
-									onClick={() => sendMessage({ message: prompt })}
+									onClick={() => handleSuggestedPrompt(prompt)}
 									disabled={isPending}
 									className='text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-3 rounded-full hover:bg-primary/10 hover:border-primary/30 transition-all duration-200 hover:shadow-sm'
 								>

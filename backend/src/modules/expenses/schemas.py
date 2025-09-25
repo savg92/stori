@@ -5,7 +5,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import Dict, List, Optional
 
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, field_validator, field_serializer
 
 
 class ExpensePeriod(str, Enum):
@@ -26,6 +26,11 @@ class CategorySummaryResponse(BaseModel):
     percentage_of_total: float
     avg_amount: Decimal
 
+    @field_serializer('total_amount', 'avg_amount')
+    def serialize_decimal(self, value: Decimal) -> float:
+        """Convert Decimal to float for JSON serialization."""
+        return float(value)
+
 
 class ExpenseSummaryResponse(BaseModel):
     """Response model for comprehensive expense summary."""
@@ -39,6 +44,11 @@ class ExpenseSummaryResponse(BaseModel):
     transaction_count: int
     date_range: Dict[str, date]
 
+    @field_serializer('total_expenses', 'total_income', 'net_amount')
+    def serialize_decimal(self, value: Decimal) -> float:
+        """Convert Decimal to float for JSON serialization."""
+        return float(value)
+
 
 class ExpenseTrendResponse(BaseModel):
     """Response model for expense trends over time."""
@@ -48,6 +58,16 @@ class ExpenseTrendResponse(BaseModel):
     total_amount: Decimal
     category_amounts: Dict[str, Decimal]
     transaction_count: int
+
+    @field_serializer('total_amount')
+    def serialize_decimal(self, value: Decimal) -> float:
+        """Convert Decimal to float for JSON serialization."""
+        return float(value)
+        
+    @field_serializer('category_amounts')
+    def serialize_category_amounts(self, value: Dict[str, Decimal]) -> Dict[str, float]:
+        """Convert Decimal values in dict to float for JSON serialization."""
+        return {k: float(v) for k, v in value.items()}
 
 
 class BudgetComparisonResponse(BaseModel):

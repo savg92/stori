@@ -59,6 +59,10 @@ class TransactionsController:
         ) -> TransactionListResponse:
             """Get paginated transactions for the current user."""
             try:
+                # Debug logging
+                logger.info(f"🔍 Transactions Controller - User ID: {current_user['user_id']}")
+                logger.info(f"🔍 Transactions Controller - User Email: {current_user.get('email', 'Unknown')}")
+                
                 # Build query object
                 query = TransactionQuery(
                     transaction_type=transaction_type,

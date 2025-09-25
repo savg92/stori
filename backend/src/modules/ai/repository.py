@@ -4,7 +4,7 @@ import logging
 from datetime import date, datetime, timedelta
 from typing import Dict, List, Optional
 
-from supabase import Client
+from services.supabase_service import SupabaseClient
 
 from core.models import TransactionType
 from .schemas import FinancialContext
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 class AIRepository:
     """Repository for AI-related data operations."""
     
-    def __init__(self, supabase_client: Client):
+    def __init__(self, supabase_client: SupabaseClient):
         self.supabase = supabase_client
     
     async def get_financial_context(
@@ -25,11 +25,30 @@ class AIRepository:
     ) -> FinancialContext:
         """Get comprehensive financial context for AI analysis."""
         try:
-            end_date = date.today()
-            start_date = end_date - timedelta(days=days_back)
+            # First, get the user's actual transaction date range
+            date_range_query = (self.supabase.client.table('transactions')
+                              .select('date')
+                              .eq('user_id', user_id)
+                              .order('date', desc=False))
+            
+            date_range_result = date_range_query.execute()
+            
+            if not date_range_result.data:
+                # No transactions found, use default date range
+                end_date = date.today()
+                start_date = end_date - timedelta(days=days_back)
+            else:
+                # Get the most recent transactions within a reasonable range
+                # Use the last transaction date as end_date, and look back from there
+                all_dates = [datetime.fromisoformat(row['date']).date() for row in date_range_result.data]
+                latest_date = max(all_dates)
+                
+                # Use either the specified days_back or get recent significant period
+                start_date = latest_date - timedelta(days=days_back)
+                end_date = latest_date
             
             # Get all transactions in the period
-            query = (self.supabase.table('transactions')
+            query = (self.supabase.client.table('transactions')
                     .select('*')
                     .eq('user_id', user_id)
                     .gte('date', start_date.isoformat())
@@ -46,7 +65,7 @@ class AIRepository:
             category_counts = {}
             
             for txn in transactions:
-                amount = float(txn['amount'])
+                amount = abs(float(txn['amount']))  # Ensure positive amount for calculations
                 category = txn['category']
                 txn_type = txn['type']
                 
@@ -101,7 +120,7 @@ class AIRepository:
             end_date = date.today()
             start_date = end_date - timedelta(days=days_back)
             
-            query = (self.supabase.table('transactions')
+            query = (self.supabase.client.table('transactions')
                     .select('*')
                     .eq('user_id', user_id)
                     .eq('type', TransactionType.EXPENSE.value)
@@ -185,7 +204,7 @@ class AIRepository:
             end_date = date.today()
             start_date = end_date - timedelta(days=days_back)
             
-            query = (self.supabase.table('transactions')
+            query = (self.supabase.client.table('transactions')
                     .select('*')
                     .eq('user_id', user_id)
                     .eq('type', TransactionType.EXPENSE.value)
@@ -237,7 +256,7 @@ class AIRepository:
         """Calculate weekly spending trends."""
         try:
             # Group transactions by week
-            query = (self.supabase.table('transactions')
+            query = (self.supabase.client.table('transactions')
                     .select('*')
                     .eq('user_id', user_id)
                     .eq('type', TransactionType.EXPENSE.value)

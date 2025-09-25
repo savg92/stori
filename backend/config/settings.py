@@ -50,7 +50,7 @@ class Settings:
         # Supabase JWT secret for token verification
         # Local development uses a standard JWT secret
         if self.use_local_supabase:
-            self.supabase_jwt_secret = os.getenv("SUPABASE_JWT_SECRET")
+            self.supabase_jwt_secret = os.getenv("SUPABASE_JWT_SECRET", "super-secret-jwt-token-with-at-least-32-characters-long")
         else:
             # For hosted Supabase, this should be the JWT secret from your Supabase project settings
             self.supabase_jwt_secret = os.getenv("SUPABASE_JWT_SECRET")

@@ -3,7 +3,7 @@
 import logging
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from typing import List
+from typing import List, Optional
 
 from core.models import Transaction
 from .repository import ExpenseRepository
@@ -33,15 +33,32 @@ class ExpenseService:
         try:
             # Set default date range if not provided
             if not filters.start_date or not filters.end_date:
-                end_date = date.today()
-                if filters.period == ExpensePeriod.DAILY:
-                    start_date = end_date
-                elif filters.period == ExpensePeriod.WEEKLY:
-                    start_date = end_date - timedelta(days=7)
-                elif filters.period == ExpensePeriod.MONTHLY:
+                # Get the user's actual transaction date range
+                date_range = await self.repository.get_user_transaction_date_range(user_id)
+                
+                if date_range:
+                    earliest_date, latest_date = date_range
+                    
+                    # Set end date to the latest available transaction
+                    end_date = latest_date
+                    
+                    # Set start date based on period from the latest transaction
+                    if filters.period == ExpensePeriod.DAILY:
+                        start_date = end_date
+                    elif filters.period == ExpensePeriod.WEEKLY:
+                        start_date = end_date - timedelta(days=7)
+                        # Make sure we don't go before the earliest transaction
+                        start_date = max(start_date, earliest_date)
+                    elif filters.period == ExpensePeriod.MONTHLY:
+                        # Get the month of the latest transaction
+                        start_date = end_date.replace(day=1)
+                    else:  # YEARLY
+                        # Get the year of the latest transaction
+                        start_date = end_date.replace(month=1, day=1)
+                else:
+                    # Fallback to current date if no transactions found
+                    end_date = date.today()
                     start_date = end_date.replace(day=1)
-                else:  # YEARLY
-                    start_date = end_date.replace(month=1, day=1)
                 
                 filters.start_date = filters.start_date or start_date
                 filters.end_date = filters.end_date or end_date
@@ -158,7 +175,7 @@ class ExpenseService:
     async def get_monthly_comparison(
         self, 
         user_id: str,
-        current_month: date = None
+        current_month: Optional[date] = None
     ) -> dict:
         """Compare current month expenses to previous month."""
         try:

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
 	Card,
 	CardContent,
@@ -30,12 +30,21 @@ import {
 	TrendingUp,
 	TrendingDown,
 	Loader2,
+	ChevronDown,
 } from 'lucide-react';
-import {
-	useTransactionFilters,
-	useDeleteTransaction,
-} from '../../hooks/useApi';
-import type { TransactionFilters } from '../../types/api';
+import { useDeleteTransaction } from '../../hooks/useApi';
+import type { Transaction, TransactionQuery } from '../../types/api';
+import { api } from '../../services/api';
+import { useQuery } from '@tanstack/react-query';
+
+// Time frame options for filtering
+const TIME_FRAME_OPTIONS = [
+	{ value: 'all', label: 'All Time', days: undefined },
+	{ value: '30d', label: 'Last 30 Days', days: 30 },
+	{ value: '3m', label: 'Last 3 Months', days: 90 },
+	{ value: '6m', label: 'Last 6 Months', days: 180 },
+	{ value: '1y', label: 'This Year', days: 365 },
+];
 
 export function TransactionList() {
 	const [searchTerm, setSearchTerm] = useState('');
@@ -43,23 +52,83 @@ export function TransactionList() {
 		'all'
 	);
 	const [categoryFilter, setCategoryFilter] = useState<string>('all');
+	const [timeFrame, setTimeFrame] = useState<string>('all');
+	const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
+	const [currentOffset, setCurrentOffset] = useState(0);
+	const [hasMore, setHasMore] = useState(true);
+	const [itemsPerPage] = useState(20); // Fixed page size
+
+	// Calculate date range based on time frame
+	const getDateRange = () => {
+		const option = TIME_FRAME_OPTIONS.find((opt) => opt.value === timeFrame);
+		if (!option?.days) return {};
+
+		const endDate = new Date();
+		const startDate = new Date();
+		startDate.setDate(endDate.getDate() - option.days);
+
+		return {
+			start_date: startDate.toISOString().split('T')[0],
+			end_date: endDate.toISOString().split('T')[0],
+		};
+	};
 
 	// Build filters object for API
-	const filters: TransactionFilters = {
+	const dateRange = getDateRange();
+	const baseFilters: Omit<TransactionQuery, 'limit' | 'offset'> = {
 		type: typeFilter !== 'all' ? typeFilter : undefined,
 		category: categoryFilter !== 'all' ? categoryFilter : undefined,
 		search: searchTerm || undefined,
+		...dateRange,
 	};
 
-	// API hooks
+	// Reset data when filters change
+	useEffect(() => {
+		setAllTransactions([]);
+		setCurrentOffset(0);
+		setHasMore(true);
+	}, [typeFilter, categoryFilter, searchTerm, timeFrame]);
+
+	// Query for loading transactions
 	const {
 		data: transactionData,
 		isLoading,
 		error,
-	} = useTransactionFilters(filters);
+	} = useQuery({
+		queryKey: ['transactions-paginated', baseFilters, currentOffset],
+		queryFn: async () => {
+			const filters: TransactionQuery = {
+				...baseFilters,
+				limit: itemsPerPage,
+				offset: currentOffset,
+			};
+			return api.transactions.list(filters);
+		},
+		enabled: hasMore,
+		staleTime: 5 * 60 * 1000,
+	});
+
+	// Update accumulated transactions when new data arrives
+	useEffect(() => {
+		if (transactionData?.items) {
+			if (currentOffset === 0) {
+				// First load - replace all
+				setAllTransactions(transactionData.items);
+			} else {
+				// Load more - append to existing
+				setAllTransactions((prev) => [...prev, ...transactionData.items]);
+			}
+			setHasMore(transactionData.has_next);
+		}
+	}, [transactionData, currentOffset]);
 	const deleteTransaction = useDeleteTransaction();
 
-	const transactions = transactionData?.items || [];
+	const transactions = allTransactions;
+
+	// Handle loading more transactions
+	const handleLoadMore = () => {
+		setCurrentOffset((prev) => prev + itemsPerPage);
+	};
 
 	const handleDelete = async (id: string) => {
 		if (window.confirm('Are you sure you want to delete this transaction?')) {
@@ -164,6 +233,24 @@ export function TransactionList() {
 								))}
 							</SelectContent>
 						</Select>
+						<Select
+							value={timeFrame}
+							onValueChange={setTimeFrame}
+						>
+							<SelectTrigger className='w-[140px]'>
+								<SelectValue placeholder='Time Frame' />
+							</SelectTrigger>
+							<SelectContent>
+								{TIME_FRAME_OPTIONS.map((option) => (
+									<SelectItem
+										key={option.value}
+										value={option.value}
+									>
+										{option.label}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
 					</div>
 
 					{/* Loading State */}
@@ -255,6 +342,39 @@ export function TransactionList() {
 										</div>
 									</div>
 								))
+							)}
+						</div>
+					)}
+
+					{/* Show More Button */}
+					{!isLoading && hasMore && (
+						<div className='flex justify-center mt-6'>
+							<Button
+								variant='outline'
+								onClick={handleLoadMore}
+								disabled={isLoading}
+								className='flex items-center space-x-2'
+							>
+								{isLoading ? (
+									<Loader2 className='h-4 w-4 animate-spin' />
+								) : (
+									<ChevronDown className='h-4 w-4' />
+								)}
+								<span>Show More</span>
+							</Button>
+						</div>
+					)}
+
+					{/* Pagination Info */}
+					{!isLoading && allTransactions.length > 0 && (
+						<div className='text-center text-sm text-muted-foreground mt-4'>
+							Showing {allTransactions.length}{' '}
+							{transactionData?.total ? `of ${transactionData.total}` : ''}{' '}
+							transactions
+							{hasMore && (
+								<span className='block mt-1'>
+									Click "Show More" to load additional transactions
+								</span>
 							)}
 						</div>
 					)}
