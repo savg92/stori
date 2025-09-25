@@ -47,7 +47,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 	};
 
 	return (
-		<div className='min-h-screen bg-background'>
+		<div className='min-h-screen bg-background w-full'>
 			{/* Mobile sidebar */}
 			<div className={`lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`}>
 				<div className='fixed inset-0 z-50 flex'>
@@ -56,29 +56,30 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 						onClick={() => setSidebarOpen(false)}
 					/>
 					<div className='relative flex w-full max-w-xs flex-col bg-card border-r'>
-						<div className='flex h-16 items-center justify-between px-4'>
+						<div className='flex h-16 items-center justify-between px-3 border-b'>
 							<span className='text-xl font-bold'>Stori</span>
 							<Button
 								variant='ghost'
 								size='icon'
 								onClick={() => setSidebarOpen(false)}
+								className='h-10 w-10'
 							>
-								<X className='h-6 w-6' />
+								<X className='h-5 w-5' />
 							</Button>
 						</div>
-						<nav className='flex-1 space-y-1 px-2 py-4'>
+						<nav className='flex-1 space-y-1 px-3 py-4 overflow-y-auto'>
 							{navigation.map((item) => (
 								<Link
 									key={item.name}
 									to={item.href}
-									className={`flex items-center rounded-md px-2 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground ${
+									className={`flex items-center rounded-md px-3 py-3 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground ${
 										isCurrentPath(item.href)
 											? 'bg-accent text-accent-foreground'
 											: 'text-muted-foreground'
 									}`}
 									onClick={() => setSidebarOpen(false)}
 								>
-									<item.icon className='mr-3 h-5 w-5' />
+									<item.icon className='mr-3 h-5 w-5 flex-shrink-0' />
 									{item.name}
 								</Link>
 							))}
@@ -113,21 +114,21 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 			</div>
 
 			{/* Main content */}
-			<div className='lg:pl-64'>
+			<div className='w-full lg:pl-64'>
 				{/* Top navigation */}
-				<div className='sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b bg-background px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8'>
+				<div className='sticky top-0 z-40 flex h-16 w-full shrink-0 items-center gap-x-2 border-b bg-background px-3 shadow-sm sm:gap-x-4 sm:px-4 lg:gap-x-6 lg:px-6'>
 					<Button
 						variant='ghost'
 						size='icon'
-						className='lg:hidden'
+						className='lg:hidden h-10 w-10'
 						onClick={() => setSidebarOpen(true)}
 					>
-						<Menu className='h-6 w-6' />
+						<Menu className='h-5 w-5' />
 					</Button>
 
-					<div className='flex flex-1 gap-x-4 self-stretch lg:gap-x-6'>
+					<div className='flex flex-1 gap-x-2 self-stretch sm:gap-x-4 lg:gap-x-6'>
 						<div className='flex flex-1'></div>
-						<div className='flex items-center gap-x-4 lg:gap-x-6'>
+						<div className='flex items-center gap-x-2 sm:gap-x-4 lg:gap-x-6'>
 							<ModeToggle />
 
 							<DropdownMenu>
@@ -135,8 +136,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 									<Button
 										variant='ghost'
 										size='icon'
+										className='h-10 w-10'
 									>
-										<User className='h-6 w-6' />
+										<User className='h-5 w-5' />
 									</Button>
 								</DropdownMenuTrigger>
 								<DropdownMenuContent align='end'>
@@ -155,8 +157,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 				</div>
 
 				{/* Page content */}
-				<main className='py-6'>
-					<div className='mx-auto max-w-7xl px-4 sm:px-6 lg:px-8'>
+				<main className='w-full'>
+					<div className='w-full px-3 py-4 sm:px-4 sm:py-6 lg:px-6 lg:py-8'>
 						{children}
 					</div>
 				</main>
