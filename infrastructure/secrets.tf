@@ -16,6 +16,7 @@ resource "aws_secretsmanager_secret_version" "app_secrets" {
   secret_string = jsonencode({
     SUPABASE_URL              = var.supabase_url
     SUPABASE_ANON_KEY        = var.supabase_anon_key
+    SUPABASE_PUBLISHABLE_KEY  = var.supabase_anon_key
     SUPABASE_SERVICE_ROLE_KEY = var.supabase_service_key
     OPENROUTER_API_KEY       = var.openrouter_api_key
     OPENROUTER_MODEL         = "z-ai/glm-4.5-air:free"
@@ -23,6 +24,8 @@ resource "aws_secretsmanager_secret_version" "app_secrets" {
     ENVIRONMENT              = var.environment
     DEBUG                    = "false"
     DEFAULT_LLM_PROVIDER     = "openrouter"
+    LLM_PROVIDER             = "openrouter"
+    USE_LOCAL_SUPABASE       = "false"
   })
 }
 
