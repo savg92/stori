@@ -1,38 +1,31 @@
 export const API_BASE_URL =
 	import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
-// Use mock endpoints for development
+// Frontend now uses live API endpoints exclusively
 export const isDevelopment = () => import.meta.env.DEV;
-const MOCK_USER_ID = 'user_1_young_professional'; // Primary user with 112 transactions
 
 export const API_ENDPOINTS = {
-	// Transactions
+	// Transactions - Live API endpoints
 	transactions: {
-		list: isDevelopment()
-			? `/api/mock/users/${MOCK_USER_ID}/transactions`
-			: '/api/transactions',
+		list: '/api/transactions',
 		create: '/api/transactions',
 		get: (id: string) => `/api/transactions/${id}`,
 		update: (id: string) => `/api/transactions/${id}`,
 		delete: (id: string) => `/api/transactions/${id}`,
 	},
 
-	// Expenses
+	// Expenses - Live API endpoints
 	expenses: {
-		summary: isDevelopment()
-			? `/api/mock/users/${MOCK_USER_ID}/summary`
-			: '/api/expenses/summary',
+		summary: '/api/expenses/summary',
 		trends: '/api/expenses/trends',
 		topCategories: '/api/expenses/categories/top',
 		monthlyComparison: '/api/expenses/comparison/monthly',
 		categories: '/api/expenses/categories',
 	},
 
-	// Timeline
+	// Timeline - Live API endpoints
 	timeline: {
-		data: isDevelopment()
-			? `/api/mock/users/${MOCK_USER_ID}/transactions`
-			: '/api/timeline',
+		data: '/api/timeline',
 		category: (category: string) => `/api/timeline/category/${category}`,
 		cashFlow: '/api/timeline/cash-flow',
 		velocity: '/api/timeline/velocity',
