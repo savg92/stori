@@ -8,7 +8,7 @@ FROM node:18-alpine AS builder
 WORKDIR /app
 
 # Install bun directly from official source
-RUN apk add --no-cache curl unzip \
+RUN apk add --no-cache curl unzip bash \
     && curl -fsSL https://bun.sh/install | bash \
     && ln -s /root/.bun/bin/bun /usr/local/bin/bun
 
