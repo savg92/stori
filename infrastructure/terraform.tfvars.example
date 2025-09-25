@@ -1,0 +1,20 @@
+# Example terraform.tfvars file
+# Copy this to terraform.tfvars and fill in your actual values
+
+# AWS Configuration
+aws_region = "us-east-1"  # Cheapest region for most AWS services
+environment = "production"
+
+# Optional: Set if you have a custom domain
+# domain_name = "yourdomain.com"
+
+# Supabase Configuration (get from your Supabase project settings)
+supabase_url = "https://your-project-id.supabase.co"
+supabase_anon_key = "your-anon-key-here"
+supabase_service_key = "your-service-role-key-here"
+
+# AI Configuration
+openrouter_api_key = "your-openrouter-api-key-here"
+
+# Note: Keep this file secure and never commit it to version control
+# Add terraform.tfvars to your .gitignore file

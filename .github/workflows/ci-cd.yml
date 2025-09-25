@@ -164,54 +164,149 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     needs: [backend-tests, frontend-tests, e2e-tests]
     runs-on: ubuntu-latest
-    name: Build and Deploy
+    name: Build and Deploy to AWS
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          bun-version: latest
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v4
-        with:
-          version: 'latest'
-
-      - name: Build frontend
-        working-directory: ./frontend
-        run: |
-          bun install --frozen-lockfile
-          bun run build
-
-      - name: Build backend Docker image
+      - name: Build, tag, and push backend image
         working-directory: ./backend
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: stori-backend
+          IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -t stori-backend:${{ github.sha }} .
+          # Build image
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
+          
+          # Push to ECR
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
-      - name: Build frontend Docker image
+      - name: Build, tag, and push frontend image
         working-directory: ./frontend
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: stori-frontend
+          IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -t stori-frontend:${{ github.sha }} .
+          # Build image
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
+          
+          # Push to ECR
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
-      # Add deployment steps here based on your infrastructure
-      # Example: Deploy to staging/production environment
+      - name: Deploy to ECS
+        env:
+          AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
+        run: |
+          # Update backend service
+          aws ecs update-service \
+            --cluster stori-cluster \
+            --service stori-backend-service \
+            --force-new-deployment \
+            --region $AWS_REGION
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+          # Update frontend service  
+          aws ecs update-service \
+            --cluster stori-cluster \
+            --service stori-frontend-service \
+            --force-new-deployment \
+            --region $AWS_REGION
+
+      - name: Wait for deployment to complete
+        env:
+          AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
+        run: |
+          echo "Waiting for backend deployment..."
+          aws ecs wait services-stable \
+            --cluster stori-cluster \
+            --services stori-backend-service \
+            --region $AWS_REGION
+
+          echo "Waiting for frontend deployment..."
+          aws ecs wait services-stable \
+            --cluster stori-cluster \
+            --services stori-frontend-service \
+            --region $AWS_REGION
+
+          echo "✅ Deployment completed successfully!"
+
+      - name: Get application URL
+        env:
+          AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
+        run: |
+          ALB_DNS=$(aws elbv2 describe-load-balancers \
+            --names stori-alb \
+            --query 'LoadBalancers[0].DNSName' \
+            --output text \
+            --region $AWS_REGION)
+          
+          echo "🚀 Application deployed successfully!"
+          echo "📱 Frontend URL: http://$ALB_DNS"
+          echo "🔧 API URL: http://$ALB_DNS/api"
+          echo "📚 API Docs: http://$ALB_DNS/docs"
+
+  # Infrastructure deployment job (run separately when needed)
+  deploy-infrastructure:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[deploy-infra]')
+    runs-on: ubuntu-latest
+    name: Deploy AWS Infrastructure
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          name: build-artifacts
-          path: |
-            frontend/dist/
-            backend/Dockerfile
-          retention-days: 7
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~1.0"
+
+      - name: Terraform Init
+        working-directory: ./infrastructure
+        run: terraform init
+
+      - name: Terraform Plan
+        working-directory: ./infrastructure
+        env:
+          TF_VAR_supabase_url: ${{ secrets.SUPABASE_URL }}
+          TF_VAR_supabase_anon_key: ${{ secrets.SUPABASE_ANON_KEY }}
+          TF_VAR_supabase_service_key: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          TF_VAR_openrouter_api_key: ${{ secrets.OPENROUTER_API_KEY }}
+          TF_VAR_aws_region: ${{ vars.AWS_REGION || 'us-east-1' }}
+        run: terraform plan
+
+      - name: Terraform Apply
+        working-directory: ./infrastructure
+        env:
+          TF_VAR_supabase_url: ${{ secrets.SUPABASE_URL }}
+          TF_VAR_supabase_anon_key: ${{ secrets.SUPABASE_ANON_KEY }}
+          TF_VAR_supabase_service_key: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          TF_VAR_openrouter_api_key: ${{ secrets.OPENROUTER_API_KEY }}
+          TF_VAR_aws_region: ${{ vars.AWS_REGION || 'us-east-1' }}
+        run: terraform apply -auto-approve
 
   security-scan:
     runs-on: ubuntu-latest

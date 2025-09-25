@@ -1,36 +1,66 @@
-# Backend Dockerfile for Stori Expense Tracker
-FROM python:3.13-slim
+# Backend Dockerfile for Stori Expense Tracker - Production Optimized
+# Multi-stage build for smaller image size and better security
+
+# Stage 1: Build dependencies
+FROM python:3.13-slim AS builder
 
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies for building
 RUN apt-get update && apt-get install -y \
+    build-essential \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Install uv for fast Python package management
-RUN pip install uv
+RUN pip install --no-cache-dir uv
 
-# Copy dependency files and README (required by pyproject.toml)
+# Copy dependency files
 COPY pyproject.toml uv.lock README.md ./
 
-# Install dependencies using uv
-RUN uv sync --frozen
+# Install dependencies using uv (production only, no dev dependencies)
+RUN uv sync --frozen --no-dev
+
+# Stage 2: Production runtime
+FROM python:3.13-slim AS production
+
+# Create non-root user for security
+RUN groupadd -r appuser && useradd -r -g appuser appuser
+
+# Set working directory
+WORKDIR /app
+
+# Install only runtime system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Copy Python virtual environment from builder stage
+COPY --from=builder /root/.local /root/.local
 
 # Copy application code
 COPY . .
 
-# Expose port
-EXPOSE 8000
+# Change ownership to non-root user
+RUN chown -R appuser:appuser /app
+
+# Switch to non-root user
+USER appuser
 
 # Set environment variables
 ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PATH="/root/.local/bin:$PATH"
+
+# Expose port
+EXPOSE 8000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/api/health || exit 1
 
-# Run the application
-CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Run the application (production mode - no reload)
+CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
