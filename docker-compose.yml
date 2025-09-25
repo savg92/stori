@@ -1,5 +1,5 @@
 # Stori Expense Tracker - Docker Compose Configuration
-version: '3.8'
+version: "3.8"
 
 services:
   # Backend API Service
@@ -8,7 +8,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     ports:
-      - '8000:8000'
+      - "8000:8000"
     environment:
       # Supabase Configuration (override in .env file)
       - SUPABASE_URL=${SUPABASE_URL:-https://your-project.supabase.co}
@@ -30,7 +30,7 @@ services:
       - stori-network
     restart: unless-stopped
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:8000/api/health']
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -41,20 +41,20 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        # Vite Environment Variables (passed at build time)
+        - VITE_SUPABASE_URL=${SUPABASE_URL:-https://your-project.supabase.co}
+        - VITE_SUPABASE_PUBLISHABLE_KEY=${SUPABASE_PUBLISHABLE_KEY:-your-publishable-key}
+        - VITE_API_BASE_URL=http://backend:8000
     ports:
-      - '3000:80'
-    environment:
-      # Vite Environment Variables
-      - VITE_SUPABASE_URL=${SUPABASE_URL:-https://your-project.supabase.co}
-      - VITE_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:-your-anon-key}
-      - VITE_API_BASE_URL=http://backend:8000
+      - "3000:80"
     networks:
       - stori-network
     depends_on:
       - backend
     restart: unless-stopped
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost/health']
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
       interval: 30s
       timeout: 10s
       retries: 3

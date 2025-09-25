@@ -21,10 +21,15 @@ RUN bun install --frozen-lockfile
 # Copy source code
 COPY . .
 
-# Set environment variables for build
-ENV VITE_SUPABASE_URL=https://placeholder.supabase.co
-ENV VITE_SUPABASE_PUBLISHABLE_KEY=placeholder
-ENV VITE_API_BASE_URL=http://localhost:8000
+# Set build-time arguments for environment variables
+ARG VITE_SUPABASE_URL=https://placeholder.supabase.co
+ARG VITE_SUPABASE_PUBLISHABLE_KEY=placeholder
+ARG VITE_API_BASE_URL=http://localhost:8000
+
+# Convert ARG to ENV so Vite can read them during build
+ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
+ENV VITE_SUPABASE_PUBLISHABLE_KEY=$VITE_SUPABASE_PUBLISHABLE_KEY  
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
 # Build the application
 RUN bun run build
@@ -38,7 +43,7 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 # Copy built application from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Add environment variable substitution script
+# Add environment variable substitution script (if needed)
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 
