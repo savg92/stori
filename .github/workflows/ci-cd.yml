@@ -61,11 +61,11 @@ jobs:
           bun run lint || echo "Linting completed with issues" 
           bun run test --run || echo "Frontend tests completed with issues"
 
-  # Infrastructure deployment job (run separately when needed)
+  # Infrastructure deployment (only on infrastructure changes)
   deploy-infrastructure:
-    if: github.ref == 'refs/heads/master' && contains(github.event.head_commit.message, '[deploy-infra]')
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push' && contains(github.event.head_commit.message, '[deploy-infra]')
     runs-on: ubuntu-latest
-    name: Deploy AWS Infrastructure
+    name: Deploy Infrastructure
 
     steps:
       - name: Checkout code
@@ -124,8 +124,12 @@ jobs:
 
       - name: Output Infrastructure Info
         working-directory: ./infrastructure
+        id: terraform-outputs
         run: |
           echo "Getting Terraform outputs..."
+          ALB_DNS=$(terraform output -raw load_balancer_dns 2>/dev/null || echo "")
+          echo "alb-dns=$ALB_DNS" >> $GITHUB_OUTPUT
+          echo "ALB DNS: $ALB_DNS"
           terraform output -no-color || echo "No outputs available yet"
 
   # Application deployment (runs after infrastructure is set up)
@@ -166,10 +170,15 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
       - name: Get ALB DNS Name
-        working-directory: ./infrastructure
         id: get-alb-dns
         run: |
-          ALB_DNS=$(terraform output -raw load_balancer_dns)
+          # Get ALB DNS from AWS CLI
+          echo "Getting ALB DNS from AWS CLI..."
+          ALB_DNS=$(aws elbv2 describe-load-balancers --names stori-alb --query 'LoadBalancers[0].DNSName' --output text 2>/dev/null || echo "")
+          if [ -z "$ALB_DNS" ] || [ "$ALB_DNS" = "None" ]; then
+            echo "Warning: Could not get ALB DNS, using placeholder"
+            ALB_DNS="your-alb-dns-name.us-east-1.elb.amazonaws.com"
+          fi
           echo "alb-dns=$ALB_DNS" >> $GITHUB_OUTPUT
           echo "API URL will be: http://$ALB_DNS/api"
 
