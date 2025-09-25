@@ -165,6 +165,14 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
+      - name: Get ALB DNS Name
+        working-directory: ./infrastructure
+        id: get-alb-dns
+        run: |
+          ALB_DNS=$(terraform output -raw load_balancer_dns)
+          echo "alb-dns=$ALB_DNS" >> $GITHUB_OUTPUT
+          echo "API URL will be: http://$ALB_DNS/api"
+
       - name: Build, tag, and push frontend image
         working-directory: ./frontend
         env:
@@ -172,9 +180,17 @@ jobs:
           ECR_REPOSITORY: stori-frontend
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          # Build image
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
+          # Build image with environment variables
+          docker build \
+            --build-arg VITE_SUPABASE_URL="${{ secrets.SUPABASE_URL }}" \
+            --build-arg VITE_SUPABASE_PUBLISHABLE_KEY="${{ secrets.SUPABASE_PUBLISHABLE_KEY }}" \
+            --build-arg VITE_API_BASE_URL="http://${{ steps.get-alb-dns.outputs.alb-dns }}/api" \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker build \
+            --build-arg VITE_SUPABASE_URL="${{ secrets.SUPABASE_URL }}" \
+            --build-arg VITE_SUPABASE_PUBLISHABLE_KEY="${{ secrets.SUPABASE_PUBLISHABLE_KEY }}" \
+            --build-arg VITE_API_BASE_URL="http://${{ steps.get-alb-dns.outputs.alb-dns }}/api" \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
 
           # Push to ECR
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
