@@ -12,6 +12,7 @@ import {
 import { Label } from '../ui/label';
 import { Alert, AlertDescription } from '../ui/alert';
 import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 export function LoginForm() {
 	const { signIn, signUp, loading } = useAuth();
@@ -27,7 +28,9 @@ export function LoginForm() {
 		setSuccess(null);
 
 		if (!email || !password) {
-			setError('Please fill in all fields');
+			const errorMessage = 'Please fill in all fields';
+			setError(errorMessage);
+			toast.error(errorMessage);
 			return;
 		}
 
@@ -37,14 +40,23 @@ export function LoginForm() {
 				: await signIn(email, password);
 
 			if (error) {
-				setError(error.message);
+				const errorMessage = error.message || 'Authentication failed';
+				setError(errorMessage);
+				toast.error(errorMessage);
 			} else if (isSignUp) {
-				setSuccess(
-					'Account created! Please check your email to verify your account.'
-				);
+				const successMessage =
+					'Account created! Please check your email to verify your account.';
+				setSuccess(successMessage);
+				toast.success(successMessage);
+			} else {
+				// Successful sign in
+				toast.success('Successfully signed in!');
 			}
-		} catch {
-			setError('An unexpected error occurred');
+		} catch (err) {
+			const errorMessage = 'An unexpected error occurred';
+			setError(errorMessage);
+			toast.error(errorMessage);
+			console.error('Authentication error:', err);
 		}
 	};
 

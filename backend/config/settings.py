@@ -47,6 +47,14 @@ class Settings:
         self.jwt_algorithm = os.getenv("JWT_ALGORITHM", "HS256")
         self.jwt_expire_minutes = int(os.getenv("JWT_EXPIRE_MINUTES", "30"))
         
+        # Supabase JWT secret for token verification
+        # Local development uses a standard JWT secret
+        if self.use_local_supabase:
+            self.supabase_jwt_secret = os.getenv("SUPABASE_JWT_SECRET")
+        else:
+            # For hosted Supabase, this should be the JWT secret from your Supabase project settings
+            self.supabase_jwt_secret = os.getenv("SUPABASE_JWT_SECRET")
+        
         # Provider settings
         self.embedding_provider = os.getenv("EMBEDDING_PROVIDER", "openai").lower()
         self.llm_provider = os.getenv("LLM_PROVIDER", "openai").lower()

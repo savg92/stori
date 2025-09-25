@@ -39,7 +39,7 @@ class TransactionsController:
             """Create a new transaction."""
             try:
                 return await self.service.create_transaction(
-                    current_user.id, transaction_data
+                    current_user["user_id"], transaction_data
                 )
             except ValueError as e:
                 raise HTTPException(status_code=400, detail=str(e))
@@ -70,7 +70,7 @@ class TransactionsController:
                 )
                 
                 return await self.service.get_transactions_paginated(
-                    current_user.id, query
+                    current_user["user_id"], query
                 )
             except ValueError as e:
                 raise HTTPException(status_code=400, detail=str(e))
@@ -86,7 +86,7 @@ class TransactionsController:
             """Get a specific transaction by ID."""
             try:
                 transaction = await self.service.get_transaction_by_id(
-                    current_user.id, transaction_id
+                    current_user["user_id"], transaction_id
                 )
                 
                 if not transaction:
@@ -108,7 +108,7 @@ class TransactionsController:
             """Update an existing transaction."""
             try:
                 updated = await self.service.update_transaction(
-                    current_user.id, transaction_id, update_data
+                    current_user["user_id"], transaction_id, update_data
                 )
                 
                 if not updated:
@@ -131,7 +131,7 @@ class TransactionsController:
             """Delete a transaction."""
             try:
                 deleted = await self.service.delete_transaction(
-                    current_user.id, transaction_id
+                    current_user["user_id"], transaction_id
                 )
                 
                 if not deleted:

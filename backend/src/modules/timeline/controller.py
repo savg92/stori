@@ -59,7 +59,7 @@ async def get_timeline(
             max_amount=Decimal(str(max_amount)) if max_amount else None
         )
         
-        return await service.get_timeline(current_user["sub"], filters)
+        return await service.get_timeline(current_user["user_id"], filters)
         
     except Exception as e:
         logger.error(f"Error getting timeline: {e}")
@@ -80,7 +80,7 @@ async def get_category_timeline(
             raise HTTPException(status_code=400, detail="months_back must be between 1 and 60")
         
         return await service.get_category_timeline(
-            current_user["sub"], 
+            current_user["user_id"], 
             category, 
             grouping, 
             months_back
@@ -107,7 +107,7 @@ async def get_cash_flow(
             raise HTTPException(status_code=400, detail="months_back must be between 1 and 60")
         
         return await service.get_cash_flow(
-            current_user["sub"], 
+            current_user["user_id"], 
             grouping, 
             months_back, 
             Decimal(str(starting_balance))
@@ -131,7 +131,7 @@ async def get_spending_velocity(
         if days < 7 or days > 365:
             raise HTTPException(status_code=400, detail="days must be between 7 and 365")
         
-        return await service.get_spending_velocity(current_user["sub"], days)
+        return await service.get_spending_velocity(current_user["user_id"], days)
         
     except HTTPException:
         raise
@@ -170,7 +170,7 @@ async def get_timeline_summary(
             grouping=grouping
         )
         
-        timeline = await service.get_timeline(current_user["sub"], filters)
+        timeline = await service.get_timeline(current_user["user_id"], filters)
         
         # Return simplified summary
         return {

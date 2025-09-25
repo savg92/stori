@@ -54,7 +54,7 @@ async def get_expense_summary(
             period=period
         )
         
-        return await service.get_expense_summary(current_user["sub"], filters)
+        return await service.get_expense_summary(current_user["user_id"], filters)
         
     except Exception as e:
         logger.error(f"Error getting expense summary: {e}")
@@ -73,7 +73,7 @@ async def get_expense_trends(
         if months_back < 1 or months_back > 60:
             raise HTTPException(status_code=400, detail="months_back must be between 1 and 60")
         
-        return await service.get_expense_trends(current_user["sub"], period, months_back)
+        return await service.get_expense_trends(current_user["user_id"], period, months_back)
         
     except HTTPException:
         raise
@@ -94,7 +94,7 @@ async def get_top_categories(
         if limit < 1 or limit > 50:
             raise HTTPException(status_code=400, detail="limit must be between 1 and 50")
         
-        return await service.get_top_expense_categories(current_user["sub"], limit, period)
+        return await service.get_top_expense_categories(current_user["user_id"], limit, period)
         
     except HTTPException:
         raise
@@ -111,7 +111,8 @@ async def get_monthly_comparison(
 ):
     """Compare current month expenses to previous month."""
     try:
-        return await service.get_monthly_comparison(current_user["sub"], month)
+        current_month = month or date.today().replace(day=1)
+        return await service.get_monthly_comparison(current_user["user_id"], current_month)
         
     except Exception as e:
         logger.error(f"Error getting monthly comparison: {e}")
@@ -127,7 +128,7 @@ async def get_expense_categories(
     try:
         # Get all categories from top categories with no limit
         categories_data = await service.get_top_expense_categories(
-            current_user["sub"], 
+            current_user["user_id"], 
             limit=1000,  # Large limit to get all categories
             period=ExpensePeriod.YEARLY
         )

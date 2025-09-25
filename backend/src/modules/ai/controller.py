@@ -48,7 +48,7 @@ async def get_financial_advice(
 ):
     """Get AI-powered financial advice based on transaction data."""
     try:
-        return await service.get_financial_advice(current_user["sub"], request)
+        return await service.get_financial_advice(current_user["user_id"], request)
         
     except Exception as e:
         logger.error(f"Error getting financial advice: {e}")
@@ -63,7 +63,7 @@ async def chat_with_ai(
 ):
     """Chat with AI about financial matters."""
     try:
-        return await service.chat_with_ai(current_user["sub"], request)
+        return await service.chat_with_ai(current_user["user_id"], request)
         
     except Exception as e:
         logger.error(f"Error in AI chat: {e}")
@@ -78,7 +78,7 @@ async def analyze_financial_data(
 ):
     """Perform AI-powered financial data analysis."""
     try:
-        return await service.analyze_financial_data(current_user["sub"], request)
+        return await service.analyze_financial_data(current_user["user_id"], request)
         
     except Exception as e:
         logger.error(f"Error analyzing financial data: {e}")
@@ -95,7 +95,7 @@ async def get_quick_insights(
     try:
         # Get basic financial context
         financial_context = await service.repository.get_financial_context(
-            current_user["sub"], days_back
+            current_user["user_id"], days_back
         )
         
         # Generate quick insights

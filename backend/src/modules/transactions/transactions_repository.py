@@ -63,23 +63,21 @@ class TransactionsRepository:
             filters = {"user_id": user_id}
             
             if query.transaction_type:
-                filters["type"] = query.transaction_type.value
+                filters["transaction_type"] = query.transaction_type.value
                 
             if query.category:
                 filters["category"] = query.category
                 
             # Apply date range filtering
-            date_filters = {}
             if query.start_date:
-                date_filters["gte"] = query.start_date.isoformat()
+                filters["start_date"] = query.start_date.isoformat()
             if query.end_date:
-                date_filters["lte"] = query.end_date.isoformat()
+                filters["end_date"] = query.end_date.isoformat()
                 
             # Get transactions from database
             transactions = self.db.get_transactions(
                 user_id=user_id,
                 filters=filters,
-                date_range=date_filters,
                 limit=query.limit,
                 offset=query.offset
             )

@@ -78,9 +78,11 @@ class SupabaseClient:
     async def get_transactions(
         self, 
         user_id: str, 
-        filters: Optional[Dict[str, Any]] = None
+        filters: Optional[Dict[str, Any]] = None,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None
     ) -> List[Dict[str, Any]]:
-        """Get transactions for a user with optional filters."""
+        """Get transactions for a user with optional filters and pagination."""
         try:
             query = self.client.table('transactions').select('*').eq('user_id', user_id)
             
@@ -93,6 +95,15 @@ class SupabaseClient:
                     query = query.eq('type', filters['transaction_type'])
                 if 'category' in filters:
                     query = query.eq('category', filters['category'])
+            
+            # Add pagination
+            if limit is not None:
+                query = query.limit(limit)
+            if offset is not None:
+                query = query.offset(offset)
+            
+            # Order by transaction_date desc for consistent pagination
+            query = query.order('transaction_date', desc=True)
             
             response = await query.execute()
             return response.data or []
