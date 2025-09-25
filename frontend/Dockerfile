@@ -7,9 +7,13 @@ FROM node:18-alpine AS builder
 # Set working directory
 WORKDIR /app
 
-# Install dependencies
-COPY package*.json bun.lock* ./
-RUN corepack enable && corepack prepare bun@1.2.21 --activate
+# Install bun directly from official source
+RUN apk add --no-cache curl unzip \
+    && curl -fsSL https://bun.sh/install | bash \
+    && ln -s /root/.bun/bin/bun /usr/local/bin/bun
+
+# Copy dependency files
+COPY package*.json bun.lockb ./
 
 # Install all dependencies
 RUN bun install --frozen-lockfile
