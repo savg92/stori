@@ -43,11 +43,11 @@ class AuthMiddleware:
             
             # Map authenticated user emails to mock data user IDs
             email_to_user_id = {
-                "alex.johnson@email.com": "user_1_young_professional",
-                "maria.garcia@email.com": "user_2_family_household", 
-                "sam.chen@email.com": "user_3_tech_entrepreneur",
-                "robert.smith@email.com": "user_4_retiree",
-                "priya.patel@email.com": "user_5_college_student"
+                "alex.johnson.test123@gmail.com": "user_1_young_professional",
+                "maria.garcia.test123@gmail.com": "user_2_family_household", 
+                "sam.chen.test123@gmail.com": "user_3_freelancer",
+                "robert.smith.test123@gmail.com": "user_4_retiree",
+                "priya.patel@email.com": "user_5_college_student"  # Keep original since no auth user created
             }
             
             # Use mock data user ID if email matches, otherwise use real user ID

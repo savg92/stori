@@ -1,7 +1,7 @@
 [
     {
         "id": "user_1_young_professional",
-        "email": "alex.johnson@email.com",
+        "email": "alex.johnson.test123@gmail.com",
         "full_name": "Alex Johnson",
         "profile_type": "young_professional",
         "preferences": {
@@ -15,7 +15,7 @@
     },
     {
         "id": "user_2_family_household",
-        "email": "maria.garcia@email.com",
+        "email": "maria.garcia.test123@gmail.com",
         "full_name": "Maria Garcia",
         "profile_type": "family_household",
         "preferences": {
@@ -30,7 +30,7 @@
     },
     {
         "id": "user_3_freelancer",
-        "email": "sam.chen@email.com",
+        "email": "sam.chen.test123@gmail.com",
         "full_name": "Sam Chen",
         "profile_type": "freelancer",
         "preferences": {
@@ -45,7 +45,7 @@
     },
     {
         "id": "user_4_retiree",
-        "email": "robert.smith@email.com",
+        "email": "robert.smith.test123@gmail.com",
         "full_name": "Robert Smith",
         "profile_type": "retiree",
         "preferences": {

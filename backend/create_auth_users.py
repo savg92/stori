@@ -6,6 +6,7 @@ This script creates auth users that correspond to the profiles in the database.
 
 import asyncio
 import os
+import requests
 from supabase import create_client, Client
 from dotenv import load_dotenv
 
@@ -14,37 +15,98 @@ load_dotenv()
 # Test credentials for the mock users
 TEST_USERS = [
     {
-        "email": "alex.johnson@email.com",
+        "email": "alex.johnson.test123@gmail.com",
         "password": "testpassword123",
         "name": "Alex Johnson",
         "profile": "young_professional"
     },
     {
-        "email": "maria.garcia@email.com", 
+        "email": "maria.garcia.test123@gmail.com", 
         "password": "testpassword123",
         "name": "Maria Garcia",
         "profile": "family_household"
     },
     {
-        "email": "sam.chen@email.com",
+        "email": "sam.chen.test123@gmail.com",
         "password": "testpassword123", 
         "name": "Sam Chen",
         "profile": "freelancer"
     },
     {
-        "email": "robert.smith@email.com",
+        "email": "robert.smith.test123@gmail.com",
         "password": "testpassword123",
         "name": "Robert Smith", 
         "profile": "retiree"
     }
 ]
 
+def get_user_by_email(email: str):
+    """Get user by email using admin API."""
+    supabase_url = os.getenv("SUPABASE_URL")
+    service_role_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+    
+    if not supabase_url or not service_role_key:
+        return None
+    
+    # Use the admin API to get user by email
+    admin_url = f"{supabase_url}/auth/v1/admin/users"
+    headers = {
+        "Authorization": f"Bearer {service_role_key}",
+        "Content-Type": "application/json"
+    }
+    
+    params = {"email": email}
+    
+    try:
+        response = requests.get(admin_url, headers=headers, params=params)
+        if response.status_code == 200:
+            users = response.json().get("users", [])
+            if users:
+                return users[0]  # Return first user found
+        return None
+    except Exception as e:
+        print(f"  ❌ Exception getting user {email}: {e}")
+        return None
+
+def confirm_user_email(user_id: str):
+    """Confirm a user's email using the admin API."""
+    supabase_url = os.getenv("SUPABASE_URL")
+    service_role_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+    
+    if not supabase_url or not service_role_key:
+        print("❌ Missing Supabase credentials!")
+        return False
+    
+    # Use the admin API to confirm the email
+    admin_url = f"{supabase_url}/auth/v1/admin/users/{user_id}"
+    headers = {
+        "Authorization": f"Bearer {service_role_key}",
+        "Content-Type": "application/json"
+    }
+    
+    # Update user to mark email as confirmed
+    data = {
+        "email_confirm": True
+    }
+    
+    try:
+        response = requests.put(admin_url, headers=headers, json=data)
+        if response.status_code == 200:
+            print(f"  ✅ Email confirmed for user {user_id}")
+            return True
+        else:
+            print(f"  ❌ Failed to confirm email for user {user_id}: {response.text}")
+            return False
+    except Exception as e:
+        print(f"  ❌ Exception confirming email for user {user_id}: {e}")
+        return False
+
 def create_auth_users():
     """Create authentication users in Supabase."""
     
     # Get Supabase credentials - use local Supabase for development
-    supabase_url = os.getenv("SUPABASE_URL", "http://127.0.0.1:54321")
-    supabase_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "sb_secret_N7UND0UgjKTVK-Uodkm0Hg_xSvEMPvz")
+    supabase_url = os.getenv("SUPABASE_URL")
+    supabase_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
     
     if not supabase_url or not supabase_key:
         print("❌ Missing Supabase credentials!")
@@ -60,41 +122,67 @@ def create_auth_users():
         
         print("👥 Creating authentication users...")
         
+        created_users = []
+        
         for user_data in TEST_USERS:
             email = user_data["email"]
             password = user_data["password"]
             name = user_data["name"]
             
-            print(f"\n🔐 Creating auth user: {email}")
+            print(f"\n🔐 Processing auth user: {email}")
             
-            try:
-                # Try to sign up the user
-                result = supabase.auth.sign_up({
-                    "email": email,
-                    "password": password,
-                    "options": {
-                        "data": {
-                            "full_name": name
-                        }
-                    }
-                })
+            # Check if user already exists
+            existing_user = get_user_by_email(email)
+            
+            if existing_user:
+                user_id = existing_user["id"]
+                print(f"  ✅ User already exists: {email}")
+                print(f"     User ID: {user_id}")
                 
-                if result.user:
-                    print(f"  ✅ Successfully created auth user: {email}")
-                    print(f"     User ID: {result.user.id}")
-                    if result.user.email_confirmed_at:
+                # Check if email is confirmed
+                if existing_user.get("email_confirmed_at"):
+                    print("     ✅ Email already confirmed")
+                else:
+                    # Confirm the email
+                    if confirm_user_email(user_id):
                         print("     ✅ Email confirmed")
                     else:
-                        print("     ⏳ Email confirmation pending")
-                else:
-                    print(f"  ❌ Failed to create user: {email}")
-                    if result.error:
-                        print(f"     Error: {result.error.message}")
+                        print("     ⏳ Email confirmation failed")
                         
-            except Exception as e:
-                print(f"  ❌ Exception creating user {email}: {str(e)}")
+                created_users.append({"email": email, "user_id": user_id})
+            else:
+                # Create new user
+                try:
+                    result = supabase.auth.sign_up({
+                        "email": email,
+                        "password": password,
+                        "options": {
+                            "data": {
+                                "full_name": name
+                            }
+                        }
+                    })
+                    
+                    if result.user:
+                        user_id = result.user.id
+                        print(f"  ✅ Successfully created auth user: {email}")
+                        print(f"     User ID: {user_id}")
+                        
+                        # Confirm the email using admin API
+                        if confirm_user_email(user_id):
+                            print("     ✅ Email confirmed")
+                        else:
+                            print("     ⏳ Email confirmation failed - may need manual confirmation")
+                        
+                        created_users.append({"email": email, "user_id": user_id})
+                    else:
+                        print(f"  ❌ Failed to create user: {email}")
+                        print(f"     Response: {result}")
+                            
+                except Exception as e:
+                    print(f"  ❌ Exception creating user {email}: {str(e)}")
                 
-        print("\n🎉 Authentication user creation completed!")
+        print("\n🎉 Authentication user processing completed!")
         print("\n📋 Test Credentials:")
         print("=" * 50)
         for user_data in TEST_USERS:

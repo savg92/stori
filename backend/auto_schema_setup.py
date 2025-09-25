@@ -20,50 +20,65 @@ class AutoSchemaSetup:
         """Initialize with Supabase connection info from environment."""
         self.schema_file = Path(__file__).parent / "schema.sql"
         
+        # Check if using local or hosted Supabase
+        self.use_local = os.getenv("USE_LOCAL_SUPABASE", "false").lower() == "true"
+        
         # Load from environment variables
         self.supabase_url = os.getenv("SUPABASE_URL")
-        self.supabase_anon_key = os.getenv("SUPABASE_ANON_KEY")
+        self.supabase_anon_key = os.getenv("SUPABASE_ANON_KEY") or os.getenv("SUPABASE_PUBLISHABLE_KEY")
+        self.service_role_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
         
-        # PostgreSQL direct connection for schema setup (local Supabase)
-        self.db_host = "127.0.0.1"
-        self.db_port = "54322"  # Supabase local PostgreSQL port
-        self.db_name = "postgres"
-        self.db_user = "postgres"
-        self.db_password = "postgres"
+        if self.use_local:
+            # PostgreSQL direct connection for schema setup (local Supabase)
+            self.db_host = "127.0.0.1"
+            self.db_port = "54322"  # Supabase local PostgreSQL port
+            self.db_name = "postgres"
+            self.db_user = "postgres"
+            self.db_password = "postgres"
         
         # Initialize Supabase client for verification
+        # Use service role key for schema operations if available
+        client_key = self.service_role_key if self.service_role_key and not self.service_role_key.startswith("REPLACE_WITH") else self.supabase_anon_key
+        
+        if not self.supabase_url or not client_key:
+            raise ValueError("SUPABASE_URL and SUPABASE_ANON_KEY/SUPABASE_SERVICE_ROLE_KEY must be set")
+            
         self.supabase: Client = create_client(
             self.supabase_url,
-            self.supabase_anon_key
+            client_key
         )
         
         logger.info(f"🔧 Using Supabase URL: {self.supabase_url}")
+        logger.info(f"🏠 Local mode: {self.use_local}")
     
     def check_supabase_status(self) -> bool:
-        """Check if local Supabase is running."""
+        """Check if Supabase is accessible."""
         try:
             # Try a simple health check by making a basic REST request
             import requests
-            response = requests.get(f"{self.supabase_url}/rest/v1/", timeout=5)
-            if response.status_code in [200, 400, 404]:  # These indicate Supabase is running
-                logger.info("✅ Local Supabase is running and accessible")
+            response = requests.get(f"{self.supabase_url}/rest/v1/", timeout=10)
+            if response.status_code in [200, 400, 401, 404]:  # These indicate Supabase is running
+                logger.info("✅ Supabase is running and accessible")
                 return True
             else:
                 logger.error(f"❌ Unexpected response from Supabase: {response.status_code}")
                 return False
         except Exception as e:
-            logger.error(f"❌ Cannot connect to local Supabase: {e}")
-            logger.error("Please make sure local Supabase is running with 'supabase start'")
+            logger.error(f"❌ Cannot connect to Supabase: {e}")
+            if self.use_local:
+                logger.error("Please make sure local Supabase is running with 'supabase start'")
+            else:
+                logger.error("Please check your hosted Supabase URL and credentials")
             return False
     
-    def run_sql_file(self, sql_file_path: Path) -> bool:
-        """Run SQL commands from a file using psql."""
+    def run_sql_file_local(self, sql_file_path: Path) -> bool:
+        """Run SQL commands from a file using psql for local Supabase."""
         try:
             if not sql_file_path.exists():
                 logger.error(f"SQL file not found: {sql_file_path}")
                 return False
             
-            logger.info(f"📂 Executing SQL file: {sql_file_path}")
+            logger.info(f"📂 Executing SQL file locally: {sql_file_path}")
             
             # Build psql command
             psql_cmd = [
@@ -100,8 +115,69 @@ class AutoSchemaSetup:
                 return False
                 
         except Exception as e:
-            logger.error(f"Error running SQL file: {e}")
+            logger.error(f"Error running SQL file locally: {e}")
             return False
+
+    def run_sql_file_hosted(self, sql_file_path: Path) -> bool:
+        """Run SQL commands from a file using Supabase Edge Functions or manual execution for hosted Supabase."""
+        try:
+            if not sql_file_path.exists():
+                logger.error(f"SQL file not found: {sql_file_path}")
+                return False
+            
+            logger.info(f"📂 Processing SQL file for hosted Supabase: {sql_file_path}")
+            
+            # Read SQL file
+            with open(sql_file_path, 'r') as file:
+                sql_content = file.read()
+            
+            # Split into individual commands
+            commands = []
+            current_command = ""
+            
+            for line in sql_content.split('\n'):
+                line = line.strip()
+                
+                # Skip comments and empty lines
+                if not line or line.startswith('--'):
+                    continue
+                    
+                current_command += line + " "
+                
+                # If line ends with semicolon, it's end of command
+                if line.endswith(';'):
+                    commands.append(current_command.strip())
+                    current_command = ""
+            
+            logger.info(f"🔧 Executing {len(commands)} SQL commands on hosted Supabase...")
+            
+            # For hosted Supabase, we'll print the commands and ask user to run them manually
+            # This is the safest approach for schema creation on hosted instances
+            print("\n" + "="*70)
+            print("🚨 HOSTED SUPABASE SCHEMA SETUP")
+            print("="*70)
+            print("Please copy and paste the following SQL commands into your")
+            print("Supabase SQL Editor at: https://supabase.com/dashboard/project/pcnhhgvdgzurbkzbakxm/sql")
+            print("\n📋 SQL Commands to execute:")
+            print("-"*50)
+            print(sql_content)
+            print("-"*50)
+            print("\nAfter running the SQL in Supabase SQL Editor, press Enter to continue...")
+            input()
+            
+            logger.info("✅ Assuming SQL was executed successfully in Supabase SQL Editor")
+            return True
+                
+        except Exception as e:
+            logger.error(f"Error processing SQL file for hosted Supabase: {e}")
+            return False
+
+    def run_sql_file(self, sql_file_path: Path) -> bool:
+        """Run SQL commands from a file using appropriate method based on environment."""
+        if self.use_local:
+            return self.run_sql_file_local(sql_file_path)
+        else:
+            return self.run_sql_file_hosted(sql_file_path)
     
     def setup_schema(self) -> bool:
         """Set up the database schema automatically."""
@@ -166,7 +242,15 @@ class AutoSchemaSetup:
             return False
     
     def _verify_table_directly(self, table_name: str) -> bool:
-        """Verify table exists using direct PostgreSQL query."""
+        """Verify table exists using direct PostgreSQL query (local only)."""
+        if not self.use_local:
+            # For hosted Supabase, fallback to trying a simple select
+            try:
+                self.supabase.table(table_name).select("count").limit(0).execute()
+                return True
+            except:
+                return False
+                
         try:
             check_cmd = [
                 "psql",
@@ -205,32 +289,39 @@ def main():
     print("=" * 50)
     
     # Show environment info
+    use_local = os.getenv("USE_LOCAL_SUPABASE", "false").lower() == "true"
     supabase_url = os.getenv("SUPABASE_URL", "http://127.0.0.1:54321")
-    is_local = "127.0.0.1" in supabase_url or "localhost" in supabase_url
     
-    if is_local:
+    if use_local:
         print("🏠 Using LOCAL Supabase environment")
         print("   Make sure 'supabase start' is running!")
     else:
         print("☁️ Using HOSTED Supabase environment")
         print(f"   URL: {supabase_url}")
+        print("   Schema will be displayed for manual execution in SQL Editor")
     
     print()
     
-    schema_setup = AutoSchemaSetup()
-    
-    # Run schema setup
-    if schema_setup.setup_schema():
-        print("\n🔍 Verifying table creation...")
-        if schema_setup.verify_tables():
-            print("\n🎉 Database schema setup completed successfully!")
-            print("   You can now run setup_database.py to populate data.")
-            return True
+    try:
+        schema_setup = AutoSchemaSetup()
+        
+        # Run schema setup
+        if schema_setup.setup_schema():
+            print("\n🔍 Verifying table creation...")
+            if schema_setup.verify_tables():
+                print("\n🎉 Database schema setup completed successfully!")
+                if not use_local:
+                    print("   ✅ Hosted Supabase schema is ready!")
+                print("   📊 You can now run setup_database.py to populate data.")
+                return True
+            else:
+                print("\n❌ Table verification failed!")
+                return False
         else:
-            print("\n❌ Table verification failed!")
+            print("\n❌ Schema setup failed!")
             return False
-    else:
-        print("\n❌ Schema setup failed!")
+    except Exception as e:
+        print(f"\n❌ Setup failed with error: {e}")
         return False
 
 

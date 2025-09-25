@@ -33,9 +33,9 @@ class Settings:
         
         if self.use_local_supabase:
             # Local Supabase development settings
-            self.supabase_url = os.getenv("SUPABASE_LOCAL_URL", "http://127.0.0.1:54321")
-            self.supabase_key = os.getenv("SUPABASE_LOCAL_ANON_KEY", "sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH")
-            self.supabase_service_key = os.getenv("SUPABASE_LOCAL_SERVICE_KEY", "sb_secret_N7UND0UgjKTVK-Uodkm0Hg_xSvEMPvz")
+            self.supabase_url = os.getenv("SUPABASE_LOCAL_URL")
+            self.supabase_key = os.getenv("SUPABASE_LOCAL_ANON_KEY")
+            self.supabase_service_key = os.getenv("SUPABASE_LOCAL_SERVICE_KEY")
         else:
             # Hosted Supabase settings
             self.supabase_url = os.getenv("SUPABASE_URL")
@@ -43,14 +43,14 @@ class Settings:
             self.supabase_service_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
         
         # JWT settings for authentication
-        self.jwt_secret = os.getenv("JWT_SECRET_KEY", "your-secret-key-change-in-production")
+        self.jwt_secret = os.getenv("JWT_SECRET_KEY")
         self.jwt_algorithm = os.getenv("JWT_ALGORITHM", "HS256")
         self.jwt_expire_minutes = int(os.getenv("JWT_EXPIRE_MINUTES", "30"))
         
         # Supabase JWT secret for token verification
         # Local development uses a standard JWT secret
         if self.use_local_supabase:
-            self.supabase_jwt_secret = os.getenv("SUPABASE_JWT_SECRET", "super-secret-jwt-token-with-at-least-32-characters-long")
+            self.supabase_jwt_secret = os.getenv("SUPABASE_JWT_SECRET")
         else:
             # For hosted Supabase, this should be the JWT secret from your Supabase project settings
             self.supabase_jwt_secret = os.getenv("SUPABASE_JWT_SECRET")
