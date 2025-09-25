@@ -21,6 +21,11 @@ RUN bun install --frozen-lockfile
 # Copy source code
 COPY . .
 
+# Set environment variables for build
+ENV VITE_SUPABASE_URL=https://placeholder.supabase.co
+ENV VITE_SUPABASE_PUBLISHABLE_KEY=placeholder
+ENV VITE_API_BASE_URL=http://localhost:8000
+
 # Build the application
 RUN bun run build
 
