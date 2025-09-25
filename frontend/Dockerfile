@@ -13,7 +13,7 @@ RUN apk add --no-cache curl unzip \
     && ln -s /root/.bun/bin/bun /usr/local/bin/bun
 
 # Copy dependency files
-COPY package*.json bun.lockb ./
+COPY package*.json bun.lock ./
 
 # Install all dependencies
 RUN bun install --frozen-lockfile
