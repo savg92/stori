@@ -7,8 +7,8 @@ on:
     branches: [master]
 
 env:
-  NODE_VERSION: '20'
-  PYTHON_VERSION: '3.13'
+  NODE_VERSION: "20"
+  PYTHON_VERSION: "3.13"
 
 jobs:
   backend-tests:
@@ -27,7 +27,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v4
         with:
-          version: 'latest'
+          version: "latest"
 
       - name: Install dependencies
         working-directory: ./backend
@@ -81,7 +81,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: "1.5.0"  # Use specific stable version
+          terraform_version: "1.5.0" # Use specific stable version
 
       - name: Terraform Init
         working-directory: ./infrastructure
@@ -160,7 +160,7 @@ jobs:
           # Build image
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
-          
+
           # Push to ECR
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
@@ -175,7 +175,7 @@ jobs:
           # Build image
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
-          
+
           # Push to ECR
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
@@ -209,7 +209,7 @@ jobs:
             --query 'LoadBalancers[0].DNSName' \
             --output text \
             --region us-east-1)
-          
+
           echo "🚀 Application deployed successfully!"
           echo "📱 Frontend URL: http://$ALB_DNS"
           echo "🔧 API URL: http://$ALB_DNS/api"

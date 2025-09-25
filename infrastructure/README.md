@@ -23,12 +23,14 @@ This infrastructure is optimized for the **AWS Free Tier** and should cost **$0-
 ### Quick Setup
 
 #### 1. Configure AWS CLI
+
 ```bash
 aws configure
 # Enter your AWS Access Key ID, Secret Access Key, and region (us-east-1 recommended)
 ```
 
 #### 2. Prepare Terraform Variables
+
 ```bash
 cd infrastructure
 cp terraform.tfvars.example terraform.tfvars
@@ -36,6 +38,7 @@ cp terraform.tfvars.example terraform.tfvars
 ```
 
 #### 3. Deploy Infrastructure
+
 ```bash
 terraform init
 terraform plan
@@ -43,6 +46,7 @@ terraform apply
 ```
 
 #### 4. Build and Push Docker Images
+
 ```bash
 # Get ECR login token
 aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin <account-id>.dkr.ecr.us-east-1.amazonaws.com
@@ -61,6 +65,7 @@ docker push <ecr-frontend-url>:latest
 ```
 
 #### 5. Update ECS Services
+
 ```bash
 # Update services to use the new images
 aws ecs update-service --cluster stori-cluster --service stori-backend-service --force-new-deployment

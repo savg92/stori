@@ -213,7 +213,7 @@ coverage/
 # Project specific
 mock_data/
 test_data/
-debug/
+# debug/
 
 # Ignore pdr, plan, frontend and backend agent and any other resume md files
 *.PRD.md
