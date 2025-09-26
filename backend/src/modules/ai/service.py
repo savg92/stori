@@ -35,12 +35,22 @@ class AIService:
         
     def _create_chat_prompt(self) -> PromptTemplate:
         """Create a prompt template for AI chat responses."""
-        template = """You are a helpful financial advisor. Answer the user's question directly and concisely in 1-2 sentences maximum.
+        template = """You are a knowledgeable financial advisor with access to the user's actual transaction data. Answer their question with specific details from their financial data.
 
-Financial Context: {financial_context}
-User Question: {question}
+FINANCIAL DATA:
+{financial_context}
 
-Give a brief, direct answer that references the data period when relevant. Be aware of the current date vs. the data period to provide temporal context (e.g., "based on your data from last year" if data is old). Be conversational and helpful without extra advice or explanations."""
+USER QUESTION: {question}
+
+INSTRUCTIONS:
+1. Always reference specific numbers, dates, and categories from the financial data above
+2. Acknowledge the data period and how current/relevant it is (if data is old, mention it)
+3. For questions about "lowest expense" or specific analysis, examine ALL categories and provide precise answers
+4. Be specific and detailed rather than generic - use actual amounts, percentages, and category names
+5. If asking about trends, compare different time periods or categories with real numbers
+6. Always provide actionable insights based on the actual data shown
+
+Answer in 2-4 sentences with specific data points:"""
         
         return PromptTemplate(
             template=template,
@@ -183,7 +193,7 @@ Give a brief, direct answer that references the data period when relevant. Be aw
             
             return ChatResponse(
                 message=response['message'],
-                conversation_id=f"chat_{user_id}_{datetime.utcnow().timestamp()}",
+                conversation_id=f"chat_{user_id}_{int(datetime.utcnow().timestamp()*1000)}",
                 suggested_actions=response.get('suggested_actions', []),
                 financial_insights=response.get('financial_insights', []),
                 confidence_score=response.get('confidence_score', 0.8)
@@ -239,15 +249,18 @@ Give a brief, direct answer that references the data period when relevant. Be aw
                     # Format financial context for the prompt
                     financial_context = self._format_financial_context(context)
                     
+                    # Add a unique timestamp to prevent caching
+                    unique_question = f"{message} [timestamp: {datetime.utcnow().isoformat()}]"
+                    
                     # Generate response using LLM
                     result = chat_chain.invoke({
                         "financial_context": financial_context,
-                        "question": message
+                        "question": unique_question
                     })
                     
                     ai_response = result["text"].strip()
                     
-                    # Extract suggested actions from context if available
+                    # Extract suggested actions from context if available  
                     suggested_actions = self._extract_suggested_actions(context)
                     financial_insights = self._extract_financial_insights(context)
                     
@@ -255,7 +268,7 @@ Give a brief, direct answer that references the data period when relevant. Be aw
                         'message': ai_response,
                         'suggested_actions': suggested_actions,
                         'financial_insights': financial_insights,
-                        'confidence_score': 0.9  # Higher confidence for LLM responses
+                        'confidence_score': 0.95  # Higher confidence for LLM responses
                     }
             except Exception as e:
                 self.logger.warning(f"LLM chat failed, falling back to basic response: {e}")
@@ -269,21 +282,37 @@ Give a brief, direct answer that references the data period when relevant. Be aw
         
         context_parts = []
         
-        # Add current date for context
+        # Add current date for temporal awareness
         from datetime import date
         current_date = date.today()
         context_parts.append(f"Current date: {current_date.isoformat()}")
         
-        # Add date range
+        # Add date range with temporal context
         if hasattr(context, 'date_range') and context.date_range:
             if isinstance(context.date_range, dict):
                 start_date = context.date_range.get('start_date', '')
                 end_date = context.date_range.get('end_date', '')
-                context_parts.append(f"Data period: {start_date} to {end_date}")
+                
+                # Calculate how old the data is
+                if end_date:
+                    try:
+                        end_date_obj = datetime.fromisoformat(end_date).date()
+                        days_old = (current_date - end_date_obj).days
+                        
+                        if days_old > 30:
+                            temporal_note = f" (data is {days_old} days old - from {end_date_obj.strftime('%B %Y')})"
+                        else:
+                            temporal_note = " (recent data)"
+                        
+                        context_parts.append(f"Data period: {start_date} to {end_date}{temporal_note}")
+                    except:
+                        context_parts.append(f"Data period: {start_date} to {end_date}")
+                else:
+                    context_parts.append(f"Data period: {start_date} to {end_date}")
             else:
                 context_parts.append(f"Time period: {context.date_range}")
         
-        # Add financial summary
+        # Add comprehensive financial summary
         if hasattr(context, 'total_income') and hasattr(context, 'total_expenses'):
             net_amount = context.total_income - abs(context.total_expenses)
             savings_rate = (net_amount / context.total_income * 100) if context.total_income > 0 else 0
@@ -291,7 +320,7 @@ Give a brief, direct answer that references the data period when relevant. Be aw
             context_parts.extend([
                 f"Total income: ${context.total_income:.2f}",
                 f"Total expenses: ${abs(context.total_expenses):.2f}",
-                f"Net amount: ${net_amount:.2f}",
+                f"Net savings: ${net_amount:.2f}",
                 f"Savings rate: {savings_rate:.1f}%"
             ])
         
@@ -299,13 +328,21 @@ Give a brief, direct answer that references the data period when relevant. Be aw
         if hasattr(context, 'transaction_count'):
             context_parts.append(f"Number of transactions: {context.transaction_count}")
         
-        # Add top categories
+        # Add ALL expense categories with detailed breakdown
         if hasattr(context, 'top_categories') and context.top_categories:
-            categories_text = ", ".join([
-                f"{cat['category']}: ${abs(cat['total_amount']):.2f}"
-                for cat in context.top_categories[:3]
-            ])
-            context_parts.append(f"Top spending categories: {categories_text}")
+            context_parts.append("\nDETAILED EXPENSE BREAKDOWN:")
+            for i, cat in enumerate(context.top_categories, 1):
+                avg_amount = cat.get('avg_amount', 0)
+                tx_count = cat.get('transaction_count', 0)
+                context_parts.append(
+                    f"{i}. {cat['category']}: ${abs(cat['total_amount']):.2f} "
+                    f"({tx_count} transactions, avg ${avg_amount:.2f} per transaction)"
+                )
+            
+            # Identify lowest expense for specific questions
+            if len(context.top_categories) > 1:
+                lowest_expense = min(context.top_categories, key=lambda x: x['total_amount'])
+                context_parts.append(f"\nLowest expense category: {lowest_expense['category']} at ${abs(lowest_expense['total_amount']):.2f}")
         
         return "\n".join(context_parts) if context_parts else "Limited financial data available."
     
