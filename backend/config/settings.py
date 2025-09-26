@@ -53,7 +53,8 @@ class Settings:
             self.supabase_jwt_secret = os.getenv("SUPABASE_JWT_SECRET")
         else:
             # For hosted Supabase, this should be the JWT secret from your Supabase project settings
-            self.supabase_jwt_secret = os.getenv("SUPABASE_JWT_SECRET")
+            # Also check for JWT_SECRET_KEY as fallback (used in AWS deployment)
+            self.supabase_jwt_secret = os.getenv("SUPABASE_JWT_SECRET") or os.getenv("JWT_SECRET_KEY")
         
         # Provider settings
         self.llm_provider = os.getenv("LLM_PROVIDER", "openrouter").lower()

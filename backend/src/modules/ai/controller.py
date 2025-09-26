@@ -36,6 +36,53 @@ def get_ai_service(
     return AIService(repository, llm_provider)
 
 
+@router.get("/debug")
+async def debug_config():
+    """Debug endpoint to check AI configuration (without exposing secrets)."""
+    try:
+        from config.settings import get_settings
+        settings = get_settings()
+        
+        return {
+            "llm_provider": settings.llm_provider,
+            "has_openrouter_api_key": bool(settings.openrouter_api_key),
+            "openrouter_model": settings.openrouter_model,
+            "has_supabase_url": bool(settings.supabase_url),
+            "has_supabase_key": bool(settings.supabase_key),
+            "has_jwt_secret": bool(settings.supabase_jwt_secret),
+            "environment_check": "ok"
+        }
+    except Exception as e:
+        logger.error(f"Error in debug config: {e}")
+        return {
+            "error": str(e),
+            "environment_check": "failed"
+        }
+
+
+@router.get("/health")
+async def ai_health():
+    """AI service health check."""
+    try:
+        # Try to create LLM provider
+        llm_provider = LLMProviderFactory.create_llm()
+        
+        return {
+            "status": "healthy",
+            "llm_available": True,
+            "provider": "openrouter",
+            "service": "ai_chat"
+        }
+    except Exception as e:
+        logger.error(f"AI health check failed: {e}")
+        return {
+            "status": "unhealthy",
+            "llm_available": False,
+            "error": str(e),
+            "service": "ai_chat"
+        }
+
+
 @router.post("/chat", response_model=ChatResponse)
 async def chat_with_ai(
     request: ChatRequest,
@@ -64,30 +111,3 @@ async def get_financial_advice(
     except Exception as e:
         logger.error(f"Error getting financial advice: {e}")
         raise HTTPException(status_code=500, detail="Failed to generate financial advice")
-
-
-@router.get("/health")
-async def ai_health():
-    """AI service health check."""
-    try:
-        # Test LLM provider availability
-        llm_provider = get_llm_provider()
-        llm_status = "available" if llm_provider else "unavailable"
-        
-        return {
-            "status": "healthy",
-            "service": "ai_chat_advice",
-            "capabilities": ["chat", "financial_advice"],
-            "llm_status": llm_status,
-            "endpoints": ["/chat", "/advice"],
-            "version": "1.0.0"
-        }
-    except Exception as e:
-        logger.error(f"AI health check failed: {e}")
-        return {
-            "status": "unhealthy",
-            "service": "ai_chat_advice", 
-            "error": str(e),
-            "endpoints": ["/chat", "/advice"],
-            "version": "1.0.0"
-        }
