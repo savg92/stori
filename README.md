@@ -98,16 +98,13 @@ SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
-# AI provider Configuration
-OPENAI_API_KEY=your-openai-api-key
-DEFAULT_LLM_PROVIDER=openai
+# AI provider Configuration - Using OpenRouter (recommended)
+OPENROUTER_API_KEY=your-openrouter-api-key
+DEFAULT_LLM_PROVIDER=openrouter
 
-# Ollama Configuration
+# Ollama Configuration (local AI)
 OLLAMA_API_URL=http://localhost:11434
 OLLAMA_MODEL_NAME=llama27b-chat
-
-# OpenRouter Configuration
-OPENROUTER_API_KEY=your-openrouter-api-key
 
 # Application Settings
 ENVIRONMENT=development
@@ -222,7 +219,7 @@ stori-expense-tracker/
 │   │   ├── modules/        # Feature modules (transactions, expenses, timeline, ai)
 │   │   ├── core/           # Core models and types
 │   │   ├── services/       # Business logic services
-│   │   └── providers/      # External integrations (AI, embeddings)
+│   │   └── providers/      # External integrations (AI providers)
 │   ├── main.py            # FastAPI application entry point
 │   └── Dockerfile         # Backend containerization
 ├── frontend/               # React TypeScript frontend

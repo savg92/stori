@@ -94,8 +94,8 @@ docker-compose logs -f backend
 
 ### AI Configuration (Optional)
 
-- `OPENAI_API_KEY`: OpenAI API key for AI advice
-- `DEFAULT_LLM_PROVIDER`: AI provider (openai, anthropic, azure, bedrock)
+- `OPENROUTER_API_KEY`: OpenRouter API key for AI advice
+- `DEFAULT_LLM_PROVIDER`: AI provider (openrouter, anthropic, azure, bedrock)
 
 ## Architecture
 

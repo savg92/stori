@@ -56,8 +56,7 @@ class Settings:
             self.supabase_jwt_secret = os.getenv("SUPABASE_JWT_SECRET")
         
         # Provider settings
-        self.embedding_provider = os.getenv("EMBEDDING_PROVIDER", "openai").lower()
-        self.llm_provider = os.getenv("LLM_PROVIDER", "openai").lower()
+        self.llm_provider = os.getenv("LLM_PROVIDER", "openrouter").lower()
         
         # LLM settings
         self.llm_temperature = self._get_float_env("LLM_TEMPERATURE", 0.7, 0.0, 2.0)
