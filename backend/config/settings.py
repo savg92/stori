@@ -98,7 +98,7 @@ class Settings:
         
         # OpenRouter settings
         self.openrouter_api_key = os.getenv("OPENROUTER_API_KEY")
-        self.openrouter_model = os.getenv("OPENROUTER_MODEL")
+        self.openrouter_model = os.getenv("OPENROUTER_MODEL", "z-ai/glm-4.5-air:free")  # Default to working model
         self.openrouter_embedding_model = os.getenv("OPENROUTER_EMBEDDING_MODEL")
         
         # Telemetry settings
