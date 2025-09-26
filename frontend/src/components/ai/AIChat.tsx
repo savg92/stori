@@ -13,6 +13,47 @@ import {
 	MessageCircle,
 } from 'lucide-react';
 
+// UUID helper: prefer crypto.randomUUID(), fall back to a secure
+// crypto.getRandomValues() based UUIDv4 generator, and finally a
+// Math.random() based fallback for very old environments.
+function uuid(): string {
+	try {
+		// Prefer native randomUUID when available
+		if (typeof globalThis !== 'undefined') {
+			type RandomCrypto = {
+				randomUUID?: () => string;
+				getRandomValues?: (arr: Uint8Array) => Uint8Array;
+			};
+
+			const c = (globalThis as unknown as { crypto?: RandomCrypto }).crypto;
+			if (c) {
+				if (typeof c.randomUUID === 'function') {
+					return c.randomUUID();
+				}
+
+				if (typeof c.getRandomValues === 'function') {
+					const bytes = c.getRandomValues(new Uint8Array(16)) as Uint8Array;
+					// Per RFC4122 v4
+					bytes[6] = (bytes[6] & 0x0f) | 0x40;
+					bytes[8] = (bytes[8] & 0x3f) | 0x80;
+
+					const hex = Array.from(bytes).map((b) => b.toString(16).padStart(2, '0'));
+					return `${hex.slice(0, 4).join('')}-${hex.slice(4, 6).join('')}-${hex.slice(6, 8).join('')}-${hex.slice(8, 10).join('')}-${hex.slice(10, 16).join('')}`;
+				}
+			}
+		}
+	} catch {
+		// fallthrough to Math.random fallback
+	}
+
+	// Fallback (not cryptographically secure)
+	return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+		const r = (Math.random() * 16) | 0;
+		const v = c === 'x' ? r : (r & 0x3) | 0x8;
+		return v.toString(16);
+	});
+}
+
 interface Message {
 	id: string;
 	content: string;
@@ -40,7 +81,7 @@ export function AIChat() {
 
 			// Add AI response to messages
 			const aiMessage: Message = {
-				id: crypto.randomUUID(),
+				id: uuid(),
 				content: response.response || response.message || 'Empty response', // Handle both possible field names
 				isUser: false,
 				timestamp: new Date(),
@@ -53,7 +94,7 @@ export function AIChat() {
 
 			// Add error message to chat
 			const errorMessage: Message = {
-				id: crypto.randomUUID(),
+				id: uuid(),
 				content:
 					"Sorry, I'm having trouble processing your request right now. Please try again later.",
 				isUser: false,
@@ -88,7 +129,7 @@ export function AIChat() {
 		if (!inputMessage.trim()) return;
 
 		const userMessage: Message = {
-			id: crypto.randomUUID(),
+			id: uuid(),
 			content: inputMessage,
 			isUser: true,
 			timestamp: new Date(),
@@ -101,7 +142,7 @@ export function AIChat() {
 
 	const handleSuggestedPrompt = (prompt: string) => {
 		const userMessage: Message = {
-			id: crypto.randomUUID(),
+			id: uuid(),
 			content: prompt,
 			isUser: true,
 			timestamp: new Date(),
