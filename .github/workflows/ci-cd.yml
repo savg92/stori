@@ -189,10 +189,18 @@ jobs:
           ECR_REPOSITORY: stori-frontend
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          # Build image (using defaults from Dockerfile since secrets aren't configured yet)
-          echo "Building frontend image with default environment variables..."
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
+          # Build image with real environment variables
+          echo "Building frontend image with production environment variables..."
+          docker build \
+            --build-arg VITE_SUPABASE_URL="${{ secrets.SUPABASE_URL }}" \
+            --build-arg VITE_SUPABASE_PUBLISHABLE_KEY="${{ secrets.SUPABASE_ANON_KEY }}" \
+            --build-arg VITE_API_BASE_URL="http://${{ steps.get-alb-dns.outputs.alb-dns }}" \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker build \
+            --build-arg VITE_SUPABASE_URL="${{ secrets.SUPABASE_URL }}" \
+            --build-arg VITE_SUPABASE_PUBLISHABLE_KEY="${{ secrets.SUPABASE_ANON_KEY }}" \
+            --build-arg VITE_API_BASE_URL="http://${{ steps.get-alb-dns.outputs.alb-dns }}" \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
 
           # Push to ECR
           echo "Pushing frontend image to ECR..."
