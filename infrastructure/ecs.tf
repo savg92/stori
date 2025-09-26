@@ -122,8 +122,8 @@ resource "aws_ecs_task_definition" "backend" {
           valueFrom = "${aws_secretsmanager_secret.app_secrets.arn}:SUPABASE_SERVICE_ROLE_KEY::"
         },
         {
-          name      = "OPENAI_API_KEY"
-          valueFrom = "${aws_secretsmanager_secret.app_secrets.arn}:OPENAI_API_KEY::"
+          name      = "OPENROUTER_API_KEY"
+          valueFrom = "${aws_secretsmanager_secret.app_secrets.arn}:OPENROUTER_API_KEY::"
         },
         {
           name      = "JWT_SECRET_KEY"
