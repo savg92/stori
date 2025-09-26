@@ -1,87 +1,87 @@
 name: Cleanup AWS Resources
 
 on:
-  workflow_dispatch:
-    inputs:
-      confirm_deletion:
-        description: 'Type "DELETE" to confirm resource deletion'
-        required: true
-        default: 'NO'
+    workflow_dispatch:
+        inputs:
+            confirm_deletion:
+                description: 'Type "DELETE" to confirm resource deletion'
+                required: true
+                default: "NO"
 
 env:
-  AWS_REGION: us-east-1
+    AWS_REGION: us-east-1
 
 jobs:
-  cleanup-aws:
-    runs-on: ubuntu-latest
-    if: github.event.inputs.confirm_deletion == 'DELETE'
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    cleanup-aws:
+        runs-on: ubuntu-latest
+        if: github.event.inputs.confirm_deletion == 'DELETE'
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
 
-      - name: Stop ECS Services
-        run: |
-          echo "Stopping ECS Services..."
-          aws ecs update-service --cluster stori-cluster --service stori-backend-service --desired-count 0 || echo "Backend service not found"
-          aws ecs update-service --cluster stori-cluster --service stori-frontend-service --desired-count 0 || echo "Frontend service not found"
-          sleep 30
+            - name: Configure AWS credentials
+              uses: aws-actions/configure-aws-credentials@v4
+              with:
+                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                  aws-region: ${{ env.AWS_REGION }}
 
-      - name: Delete ECS Services
-        run: |
-          echo "Deleting ECS Services..."
-          aws ecs delete-service --cluster stori-cluster --service stori-backend-service || echo "Backend service not found"
-          aws ecs delete-service --cluster stori-cluster --service stori-frontend-service || echo "Frontend service not found"
+            - name: Stop ECS Services
+              run: |
+                  echo "Stopping ECS Services..."
+                  aws ecs update-service --cluster stori-cluster --service stori-backend-service --desired-count 0 || echo "Backend service not found"
+                  aws ecs update-service --cluster stori-cluster --service stori-frontend-service --desired-count 0 || echo "Frontend service not found"
+                  sleep 30
 
-      - name: Delete ECS Cluster
-        run: |
-          echo "Deleting ECS Cluster..."
-          aws ecs delete-cluster --cluster stori-cluster || echo "Cluster not found"
+            - name: Delete ECS Services
+              run: |
+                  echo "Deleting ECS Services..."
+                  aws ecs delete-service --cluster stori-cluster --service stori-backend-service || echo "Backend service not found"
+                  aws ecs delete-service --cluster stori-cluster --service stori-frontend-service || echo "Frontend service not found"
 
-      - name: Delete Load Balancer and Target Groups
-        run: |
-          echo "Deleting Load Balancer..."
-          ALB_ARN=$(aws elbv2 describe-load-balancers --names stori-alb --query 'LoadBalancers[0].LoadBalancerArn' --output text 2>/dev/null || echo "")
-          if [ "$ALB_ARN" != "" ] && [ "$ALB_ARN" != "None" ]; then
-            aws elbv2 delete-load-balancer --load-balancer-arn "$ALB_ARN"
-          fi
-          
-          echo "Deleting Target Groups..."
-          aws elbv2 delete-target-group --target-group-arn $(aws elbv2 describe-target-groups --names stori-backend-tg --query 'TargetGroups[0].TargetGroupArn' --output text 2>/dev/null) 2>/dev/null || echo "Backend TG not found"
-          aws elbv2 delete-target-group --target-group-arn $(aws elbv2 describe-target-groups --names stori-frontend-tg --query 'TargetGroups[0].TargetGroupArn' --output text 2>/dev/null) 2>/dev/null || echo "Frontend TG not found"
+            - name: Delete ECS Cluster
+              run: |
+                  echo "Deleting ECS Cluster..."
+                  aws ecs delete-cluster --cluster stori-cluster || echo "Cluster not found"
 
-      - name: Delete ECR Repositories
-        run: |
-          echo "Deleting ECR Repositories..."
-          aws ecr delete-repository --repository-name stori-backend --force || echo "Backend ECR not found"
-          aws ecr delete-repository --repository-name stori-frontend --force || echo "Frontend ECR not found"
+            - name: Delete Load Balancer and Target Groups
+              run: |
+                  echo "Deleting Load Balancer..."
+                  ALB_ARN=$(aws elbv2 describe-load-balancers --names stori-alb --query 'LoadBalancers[0].LoadBalancerArn' --output text 2>/dev/null || echo "")
+                  if [ "$ALB_ARN" != "" ] && [ "$ALB_ARN" != "None" ]; then
+                    aws elbv2 delete-load-balancer --load-balancer-arn "$ALB_ARN"
+                  fi
 
-      - name: Delete IAM Roles
-        run: |
-          echo "Deleting IAM Roles..."
-          aws iam detach-role-policy --role-name stori-ecs-task-execution-role --policy-arn arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy 2>/dev/null || echo "Policy not attached"
-          aws iam delete-role-policy --role-name stori-ecs-task-execution-role --policy-name stori-ecs-secrets-policy 2>/dev/null || echo "Inline policy not found"
-          aws iam delete-role --role-name stori-ecs-task-execution-role 2>/dev/null || echo "Task execution role not found"
-          aws iam delete-role --role-name stori-ecs-task-role 2>/dev/null || echo "Task role not found"
+                  echo "Deleting Target Groups..."
+                  aws elbv2 delete-target-group --target-group-arn $(aws elbv2 describe-target-groups --names stori-backend-tg --query 'TargetGroups[0].TargetGroupArn' --output text 2>/dev/null) 2>/dev/null || echo "Backend TG not found"
+                  aws elbv2 delete-target-group --target-group-arn $(aws elbv2 describe-target-groups --names stori-frontend-tg --query 'TargetGroups[0].TargetGroupArn' --output text 2>/dev/null) 2>/dev/null || echo "Frontend TG not found"
 
-      - name: Delete Secrets and Logs
-        run: |
-          echo "Deleting Secrets Manager Secret..."
-          aws secretsmanager delete-secret --secret-id stori/production/app-secrets --force-delete-without-recovery 2>/dev/null || echo "Secret not found"
-          
-          echo "Deleting CloudWatch Log Groups..."
-          aws logs delete-log-group --log-group-name /aws/ecs/stori-backend 2>/dev/null || echo "Backend log group not found"
-          aws logs delete-log-group --log-group-name /aws/ecs/stori-frontend 2>/dev/null || echo "Frontend log group not found"
+            - name: Delete ECR Repositories
+              run: |
+                  echo "Deleting ECR Repositories..."
+                  aws ecr delete-repository --repository-name stori-backend --force || echo "Backend ECR not found"
+                  aws ecr delete-repository --repository-name stori-frontend --force || echo "Frontend ECR not found"
 
-      - name: Wait for cleanup completion
-        run: |
-          echo "Waiting for resources to be fully deleted..."
-          sleep 60
-          echo "✅ AWS resource cleanup complete!"
+            - name: Delete IAM Roles
+              run: |
+                  echo "Deleting IAM Roles..."
+                  aws iam detach-role-policy --role-name stori-ecs-task-execution-role --policy-arn arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy 2>/dev/null || echo "Policy not attached"
+                  aws iam delete-role-policy --role-name stori-ecs-task-execution-role --policy-name stori-ecs-secrets-policy 2>/dev/null || echo "Inline policy not found"
+                  aws iam delete-role --role-name stori-ecs-task-execution-role 2>/dev/null || echo "Task execution role not found"
+                  aws iam delete-role --role-name stori-ecs-task-role 2>/dev/null || echo "Task role not found"
+
+            - name: Delete Secrets and Logs
+              run: |
+                  echo "Deleting Secrets Manager Secret..."
+                  aws secretsmanager delete-secret --secret-id stori/production/app-secrets --force-delete-without-recovery 2>/dev/null || echo "Secret not found"
+
+                  echo "Deleting CloudWatch Log Groups..."
+                  aws logs delete-log-group --log-group-name /aws/ecs/stori-backend 2>/dev/null || echo "Backend log group not found"
+                  aws logs delete-log-group --log-group-name /aws/ecs/stori-frontend 2>/dev/null || echo "Frontend log group not found"
+
+            - name: Wait for cleanup completion
+              run: |
+                  echo "Waiting for resources to be fully deleted..."
+                  sleep 60
+                  echo "✅ AWS resource cleanup complete!"

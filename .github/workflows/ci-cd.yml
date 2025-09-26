@@ -1,6 +1,5 @@
 name: Simple CI/CD Pipeline
 
-# Trigger infrastructure deployment with OPENROUTER_API_KEY fix
 on:
   push:
     branches: [master, develop]
