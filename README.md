@@ -80,8 +80,8 @@ A modern, full-stack expense tracker with AI-powered financial advice built for 
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/stori-expense-tracker.git
-cd stori-expense-tracker
+git clone https://github.com/savg92/stori
+cd stori
 ```
 
 ### 2. Environment Setup
@@ -320,3 +320,13 @@ For support, create an issue on GitHub.
 **⭐ If you find this project helpful, please give it a star on GitHub!**
 test deployment
 Application deployment test - infrastructure already exists
+
+## Deployed (Production) URLs
+
+The application has been deployed to AWS ECS behind an Application Load Balancer. Use the URLs below to access the running environment:
+
+- Frontend: http://stori-alb-1695148407.us-east-1.elb.amazonaws.com
+- Backend API: http://stori-alb-1695148407.us-east-1.elb.amazonaws.com/api
+- API Docs: http://stori-alb-1695148407.us-east-1.elb.amazonaws.com/docs
+
+If you redeploy or your ALB DNS changes, update these links or use the CI/CD job outputs to retrieve the current ALB DNS.
