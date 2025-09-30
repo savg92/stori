@@ -216,20 +216,20 @@ test_data/
 # debug/
 
 # Ignore pdr, plan, frontend and backend agent and any other resume md files
-*.PRD.md
-*.Plan.md
-*.AGENTS.md
-*.resume.md
-*.backend_agent.md
-*.frontend_agent.md
-PRD.md
-Plan.md
-.AGENTS.md
-resume.md
-backend_agent.md
-frontend_agent.md
-frontend/agent/
-backend/agent/ 
+# *.PRD.md
+# *.Plan.md
+# *.AGENTS.md
+# *.resume.md
+# *.backend_agent.md
+# *.frontend_agent.md
+# PRD.md
+# Plan.md
+# .AGENTS.md
+# resume.md
+# backend_agent.md
+# frontend_agent.md
+# frontend/agent/
+# backend/agent/ 
 
 # ignore all md files except README.md
 *.md
@@ -239,14 +239,14 @@ backend/agent/
 !readme.MD
 
 # Project documentation and config files not to be committed
-AGENTS.md
-backend_agent.md
-DEVELOPMENT_SUMMARY.md
-DOCKER_SETUP.md
-mock_expense_and_income.json
-Plan.md
-PRD.md
-.agentignore
+# AGENTS.md
+# backend_agent.md
+# DEVELOPMENT_SUMMARY.md
+# DOCKER_SETUP.md
+# mock_expense_and_income.json
+# Plan.md
+# PRD.md
+# .agentignore
 
 # Ignore github copilot-instructions files
 *.github/copilot-instructions
