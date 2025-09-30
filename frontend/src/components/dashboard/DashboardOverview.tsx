@@ -74,7 +74,11 @@ export function DashboardOverview() {
 	);
 
 	// Handle date range changes from DateRangePicker
-	const handleRangeChange = (range: { start: string; end: string; label: string }) => {
+	const handleRangeChange = (range: {
+		start: string;
+		end: string;
+		label: string;
+	}) => {
 		setDateRange({
 			startDate: range.start,
 			endDate: range.end,
@@ -120,35 +124,31 @@ export function DashboardOverview() {
 		: [
 				{
 					title: 'Total Balance',
-					value: '$12,453.20',
-					description: 'from last month',
+					value: '$0.00',
+					description: 'no data available',
 					icon: DollarSign,
-					trend: 'up' as const,
-					trendValue: '+12%',
+					trend: 'neutral' as const,
 				},
 				{
 					title: 'Monthly Income',
-					value: '$5,420.00',
-					description: 'this month',
+					value: '$0.00',
+					description: 'no data available',
 					icon: TrendingUp,
-					trend: 'up' as const,
-					trendValue: '+8%',
+					trend: 'neutral' as const,
 				},
 				{
 					title: 'Monthly Expenses',
-					value: '$2,134.50',
-					description: 'this month',
+					value: '$0.00',
+					description: 'no data available',
 					icon: TrendingDown,
-					trend: 'down' as const,
-					trendValue: '-3%',
+					trend: 'neutral' as const,
 				},
 				{
 					title: 'Transactions',
-					value: '127',
-					description: 'this month',
+					value: '0',
+					description: 'no data available',
 					icon: CreditCard,
-					trend: 'up' as const,
-					trendValue: '+15',
+					trend: 'neutral' as const,
 				},
 		  ];
 
@@ -161,9 +161,7 @@ export function DashboardOverview() {
 						Welcome back! Here's an overview of your financial activity.
 					</p>
 				</div>
-				<DateRangePicker
-					onRangeChange={handleRangeChange}
-				/>
+				<DateRangePicker onRangeChange={handleRangeChange} />
 			</div>
 
 			<div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4'>
@@ -177,14 +175,14 @@ export function DashboardOverview() {
 
 			<div className='grid gap-4 md:grid-cols-2 lg:grid-cols-7'>
 				<RecentTransactions />
-				<ExpenseChart 
+				<ExpenseChart
 					startDate={dateRange.startDate}
 					endDate={dateRange.endDate}
 				/>
 			</div>
 
 			<div className='grid gap-4'>
-				<TimelineChart 
+				<TimelineChart
 					startDate={dateRange.startDate}
 					endDate={dateRange.endDate}
 				/>

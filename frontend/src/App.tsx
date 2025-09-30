@@ -1,20 +1,13 @@
 import './App.css';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from './components/theme-provider';
 import { AuthProvider } from './hooks/useAuth';
 import { useAuth } from './contexts/auth-context';
 import { LoginForm } from './components/auth/LoginForm';
-import { AppRouter } from './components/router/AppRouter';
+import { AppRouter } from './components/router/LazyAppRouter';
 import { Toaster } from 'sonner';
-
-const queryClient = new QueryClient({
-	defaultOptions: {
-		queries: {
-			staleTime: 5 * 60 * 1000, // 5 minutes
-			gcTime: 10 * 60 * 1000, // 10 minutes
-		},
-	},
-});
+import { queryClient } from './lib/queryClient';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 function AppContent() {
 	const { user, loading } = useAuth();
@@ -41,9 +34,11 @@ function App() {
 				defaultTheme='dark'
 				storageKey='vite-ui-theme'
 			>
-				<AuthProvider>
-					<AppContent />
-				</AuthProvider>
+				<ErrorBoundary>
+					<AuthProvider>
+						<AppContent />
+					</AuthProvider>
+				</ErrorBoundary>
 				<Toaster />
 			</ThemeProvider>
 		</QueryClientProvider>

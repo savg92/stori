@@ -63,11 +63,19 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 								size='icon'
 								onClick={() => setSidebarOpen(false)}
 								className='h-10 w-10'
+								aria-label='Close navigation menu'
 							>
-								<X className='h-5 w-5' />
+								<X
+									className='h-5 w-5'
+									aria-hidden='true'
+								/>
 							</Button>
 						</div>
-						<nav className='flex-1 space-y-1 px-3 py-4 overflow-y-auto'>
+						<nav
+							className='flex-1 space-y-1 px-3 py-4 overflow-y-auto'
+							aria-label='Main navigation'
+							role='navigation'
+						>
 							{navigation.map((item) => (
 								<Link
 									key={item.name}
@@ -94,7 +102,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 					<div className='flex h-16 items-center px-4'>
 						<span className='text-xl font-bold'>Stori</span>
 					</div>
-					<nav className='flex-1 space-y-1 px-2 py-4'>
+					<nav
+						className='flex-1 space-y-1 px-2 py-4'
+						aria-label='Main navigation'
+						role='navigation'
+					>
 						{navigation.map((item) => (
 							<Link
 								key={item.name}
@@ -122,8 +134,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 						size='icon'
 						className='lg:hidden h-10 w-10'
 						onClick={() => setSidebarOpen(true)}
+						aria-label='Open navigation menu'
+						aria-expanded={sidebarOpen}
 					>
-						<Menu className='h-5 w-5' />
+						<Menu
+							className='h-5 w-5'
+							aria-hidden='true'
+						/>
 					</Button>
 
 					<div className='flex flex-1 gap-x-2 self-stretch sm:gap-x-4 lg:gap-x-6'>

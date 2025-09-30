@@ -83,7 +83,6 @@ export function AIChat() {
 	const { mutate: sendMessage, isPending } = useAIChat({
 		onSuccess: (response) => {
 			// Debug log to see what we're getting
-			console.log('AI Response received:', response);
 
 			// Add AI response to messages
 			const aiMessage: Message = {
@@ -94,10 +93,8 @@ export function AIChat() {
 			};
 			setMessages((prev) => [...prev, aiMessage]);
 		},
-		onError: (error) => {
-			// Debug log to see errors
-			console.error('AI Chat error:', error);
-
+		onError: () => {
+			// Error is already handled by toast notification
 			// Add error message to chat
 			const errorMessage: Message = {
 				id: uuid(),

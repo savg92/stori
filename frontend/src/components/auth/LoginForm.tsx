@@ -52,11 +52,10 @@ export function LoginForm() {
 				// Successful sign in
 				toast.success('Successfully signed in!');
 			}
-		} catch (err) {
+		} catch {
 			const errorMessage = 'An unexpected error occurred';
 			setError(errorMessage);
 			toast.error(errorMessage);
-			console.error('Authentication error:', err);
 		}
 	};
 

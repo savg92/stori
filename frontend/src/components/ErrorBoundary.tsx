@@ -31,7 +31,10 @@ export class ErrorBoundary extends React.Component<Props, State> {
 	}
 
 	public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-		console.error('Error caught by boundary:', error, errorInfo);
+		// Log errors in development only
+		if (import.meta.env.DEV) {
+			console.error('Error caught by boundary:', error, errorInfo);
+		}
 
 		// You could also log the error to an error reporting service here
 		// logErrorToService(error, errorInfo);

@@ -127,13 +127,11 @@ export const ai = {
 			message,
 			session_id: sessionId,
 		};
-		console.log('AI Chat request:', requestData);
 
 		const response = await apiClient.post<AIAdviceResponse>(
 			API_ENDPOINTS.ai.chat,
 			requestData
 		);
-		console.log('AI Chat response:', response);
 
 		return response;
 	},

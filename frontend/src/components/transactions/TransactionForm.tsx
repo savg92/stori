@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useModalFocus } from '../../hooks/useAccessibility';
+import { useErrorHandler } from '../../hooks/useErrorHandler';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -93,10 +95,17 @@ export function TransactionForm({
 	const [transactionType, setTransactionType] = useState<'income' | 'expense'>(
 		initialData?.type || 'expense'
 	);
+	const dialogRef = useRef<HTMLElement>(null);
+
+	// Focus management for modal
+	useModalFocus(open, dialogRef);
 
 	// API hooks
 	const createTransaction = useCreateTransaction();
 	const updateTransaction = useUpdateTransaction();
+
+	// Error handling
+	const { handleFormError } = useErrorHandler();
 
 	const {
 		register,
@@ -146,7 +155,10 @@ export function TransactionForm({
 			setOpen(false);
 			reset();
 		} catch (error) {
-			console.error('Failed to submit transaction:', error);
+			handleFormError(
+				error,
+				mode === 'edit' ? 'update transaction' : 'create transaction'
+			);
 		}
 	};
 
@@ -174,7 +186,10 @@ export function TransactionForm({
 					</Button>
 				)}
 			</DialogTrigger>
-			<DialogContent className='sm:max-w-[425px]'>
+			<DialogContent
+				className='sm:max-w-[425px]'
+				ref={dialogRef as React.RefObject<HTMLDivElement>}
+			>
 				<DialogHeader>
 					<DialogTitle>
 						{initialData ? 'Edit Transaction' : 'Add New Transaction'}
@@ -191,12 +206,15 @@ export function TransactionForm({
 				>
 					<div className='grid grid-cols-2 gap-4'>
 						<div className='space-y-2'>
-							<Label htmlFor='type'>Type</Label>
+							<Label htmlFor='transaction-type'>Type</Label>
 							<Select
 								value={watchedType}
 								onValueChange={handleTypeChange}
+								name='transaction-type'
+								required
+								aria-label='Transaction type'
 							>
-								<SelectTrigger>
+								<SelectTrigger id='transaction-type'>
 									<SelectValue placeholder='Select type' />
 								</SelectTrigger>
 								<SelectContent>
@@ -219,9 +237,16 @@ export function TransactionForm({
 								step='0.01'
 								placeholder='0.00'
 								{...register('amount', { valueAsNumber: true })}
+								aria-describedby={errors.amount ? 'amount-error' : undefined}
+								aria-invalid={!!errors.amount}
+								required
 							/>
 							{errors.amount && (
-								<p className='text-sm text-destructive'>
+								<p
+									id='amount-error'
+									className='text-sm text-destructive'
+									role='alert'
+								>
 									{errors.amount.message}
 								</p>
 							)}
@@ -234,7 +259,14 @@ export function TransactionForm({
 							value={watch('category')}
 							onValueChange={(value: string) => setValue('category', value)}
 						>
-							<SelectTrigger>
+							<SelectTrigger
+								id='category'
+								aria-describedby={
+									errors.category ? 'category-error' : undefined
+								}
+								aria-invalid={!!errors.category}
+								aria-required
+							>
 								<SelectValue placeholder='Select category' />
 							</SelectTrigger>
 							<SelectContent>
@@ -249,7 +281,11 @@ export function TransactionForm({
 							</SelectContent>
 						</Select>
 						{errors.category && (
-							<p className='text-sm text-destructive'>
+							<p
+								id='category-error'
+								className='text-sm text-destructive'
+								role='alert'
+							>
 								{errors.category.message}
 							</p>
 						)}
@@ -261,9 +297,18 @@ export function TransactionForm({
 							id='date'
 							type='date'
 							{...register('date')}
+							aria-describedby={errors.date ? 'date-error' : undefined}
+							aria-invalid={!!errors.date}
+							required
 						/>
 						{errors.date && (
-							<p className='text-sm text-destructive'>{errors.date.message}</p>
+							<p
+								id='date-error'
+								className='text-sm text-destructive'
+								role='alert'
+							>
+								{errors.date.message}
+							</p>
 						)}
 					</div>
 
@@ -273,9 +318,17 @@ export function TransactionForm({
 							id='description'
 							placeholder='Add a description...'
 							{...register('description')}
+							aria-describedby={
+								errors.description ? 'description-error' : undefined
+							}
+							aria-invalid={!!errors.description}
 						/>
 						{errors.description && (
-							<p className='text-sm text-destructive'>
+							<p
+								id='description-error'
+								className='text-sm text-destructive'
+								role='alert'
+							>
 								{errors.description.message}
 							</p>
 						)}
@@ -287,14 +340,30 @@ export function TransactionForm({
 							variant='outline'
 							onClick={() => setOpen(false)}
 							disabled={isLoading}
+							aria-label='Cancel transaction form'
 						>
 							Cancel
 						</Button>
 						<Button
 							type='submit'
 							disabled={isLoading}
+							aria-label={`${initialData ? 'Update' : 'Add'} transaction`}
+							aria-describedby={isLoading ? 'form-loading' : undefined}
 						>
-							{isLoading && <Loader2 className='mr-2 h-4 w-4 animate-spin' />}
+							{isLoading && (
+								<>
+									<Loader2
+										className='mr-2 h-4 w-4 animate-spin'
+										aria-hidden='true'
+									/>
+									<span
+										id='form-loading'
+										className='sr-only'
+									>
+										{initialData ? 'Updating' : 'Adding'} transaction...
+									</span>
+								</>
+							)}
 							{initialData ? 'Update' : 'Add'} Transaction
 						</Button>
 					</DialogFooter>

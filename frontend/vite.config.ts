@@ -16,7 +16,7 @@ export default defineConfig({
 		rollupOptions: {
 			output: {
 				manualChunks: {
-					// Separate chart library into its own chunk
+					// Separate chart library into its own chunk (largest dependency)
 					charts: ['recharts'],
 					// Separate UI components into their own chunk
 					ui: [
@@ -34,11 +34,24 @@ export default defineConfig({
 					router: ['@tanstack/react-router', 'react-router-dom'],
 					// Separate auth/supabase into its own chunk
 					auth: ['@supabase/supabase-js'],
+					// Separate utility libraries
+					utils: [
+						'date-fns',
+						'clsx',
+						'tailwind-merge',
+						'class-variance-authority',
+					],
+					// Separate form handling
+					forms: ['react-hook-form', '@hookform/resolvers', 'zod'],
 				},
 			},
 		},
-		// Increase chunk size warning limit to 750kb as we've optimized chunking
-		chunkSizeWarningLimit: 750,
+		// Increase chunk size warning limit as we've optimized chunking
+		chunkSizeWarningLimit: 600,
+		// Enable compression
+		target: 'esnext',
+		minify: 'esbuild',
+		sourcemap: false, // Disable sourcemaps in production for smaller build
 	},
 	test: {
 		globals: true,
