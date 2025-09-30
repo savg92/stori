@@ -8,8 +8,7 @@ from .auth_middleware import (
     get_current_user, 
     get_optional_user,
     require_auth,
-    get_user_id,
-    jwt_auth
+    get_user_id
 )
 
 __all__ = [
@@ -21,6 +20,5 @@ __all__ = [
     "get_current_user",
     "get_optional_user", 
     "require_auth",
-    "get_user_id",
-    "jwt_auth"
+    "get_user_id"
 ]

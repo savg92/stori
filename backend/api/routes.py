@@ -1,12 +1,7 @@
 """API routes for the Stori expense tracker application."""
 
 import logging
-from typing import Dict
-from fastapi import APIRouter, Depends, HTTPException
-from fastapi.security import HTTPBearer
-import jwt
-
-from config.settings import get_settings
+from fastapi import APIRouter
 
 # Import modular controllers
 from src.modules.transactions.transactions_controller import router as transactions_router
@@ -20,24 +15,6 @@ logger = logging.getLogger(__name__)
 
 # Create main router
 router = APIRouter()
-
-# Security scheme
-security = HTTPBearer()
-
-async def get_current_user(token: str = Depends(security)) -> Dict:
-    """Extract user information from JWT token."""
-    try:
-        settings = get_settings()
-        payload = jwt.decode(
-            token.credentials, 
-            settings.supabase_jwt_secret, 
-            algorithms=["HS256"]
-        )
-        return payload
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token has expired")
-    except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Invalid token")
 
 
 @router.get("/health")

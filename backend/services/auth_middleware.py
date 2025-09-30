@@ -5,8 +5,6 @@ from typing import Optional, Dict, Any
 from fastapi import HTTPException, Depends, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from supabase import create_client
-import jwt
-from datetime import datetime, timezone
 
 from config.settings import get_settings
 
@@ -131,49 +129,3 @@ def get_user_id(user: Dict[str, Any] = Depends(get_current_user)) -> str:
     return user["user_id"]
 
 
-# Alternative JWT verification (if needed for custom tokens)
-class JWTAuth:
-    """Custom JWT authentication handler."""
-    
-    def __init__(self):
-        """Initialize JWT auth."""
-        self._settings = get_settings()
-    
-    def create_access_token(self, data: Dict[str, Any]) -> str:
-        """Create a new access token."""
-        try:
-            to_encode = data.copy()
-            expire = datetime.now(timezone.utc).timestamp() + (
-                self._settings.jwt_access_token_expire_minutes * 60
-            )
-            to_encode.update({"exp": expire})
-            
-            encoded_jwt = jwt.encode(
-                to_encode, 
-                self._settings.jwt_secret_key, 
-                algorithm=self._settings.jwt_algorithm
-            )
-            return encoded_jwt
-            
-        except Exception as e:
-            logger.error(f"Failed to create access token: {e}")
-            raise
-    
-    def verify_token(self, token: str) -> Dict[str, Any]:
-        """Verify and decode custom JWT token."""
-        try:
-            payload = jwt.decode(
-                token, 
-                self._settings.jwt_secret_key, 
-                algorithms=[self._settings.jwt_algorithm]
-            )
-            return payload
-            
-        except jwt.ExpiredSignatureError:
-            raise AuthenticationError("Token has expired")
-        except jwt.JWTError as e:
-            raise AuthenticationError(f"Invalid token: {str(e)}")
-
-
-# Global JWT auth instance
-jwt_auth = JWTAuth()
