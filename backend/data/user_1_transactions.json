@@ -161,7 +161,7 @@
         "type": "expense"
     },
     {
-        "date": "2024-02-26",
+        "date": "26-02-2024",
         "amount": -30,
         "category": "entertainment",
         "description": "Streaming subscription",
@@ -337,7 +337,7 @@
     },
     {
         "date": "2024-05-05",
-        "amount": -92,
+        "amount": 0.5,
         "category": "groceries",
         "description": "Safeway",
         "type": "expense"
@@ -513,7 +513,7 @@
     {
         "date": "2024-07-14",
         "amount": -50,
-        "category": "transportation",
+        "category": "technology",
         "description": "Gas station",
         "type": "expense"
     },
@@ -782,5 +782,152 @@
         "category": "dining",
         "description": "Pumpkin spice everything",
         "type": "expense"
+    },
+    {
+        "date": "2024-11-01",
+        "amount": -50,
+        "category": "videogames",
+        "description": "Steam purchase",
+        "type": "expense"
+    },
+    {
+        "date": "2024-11-02",
+        "amount": 0,
+        "category": "videogames",
+        "description": "Epic Games freebie",
+        "type": "expense"
+    },
+    {
+        "date": "2024-11-03",
+        "amount": -60,
+        "category": "videogames",
+        "description": "Nintendo eShop",
+        "type": "expense"
+    },
+    {
+        "date": "2024-11-04",
+        "amount": "NaN",
+        "category": "videogames",
+        "description": "PlayStation Store error",
+        "type": "expense"
+    },
+    {
+        "date": "2024-11-05",
+        "amount": -70,
+        "category": "videogames",
+        "description": "Xbox Game Pass",
+        "type": "expense"
+    },
+    {
+        "date": "2024-11-06",
+        "amount": -80,
+        "category": "videogames",
+        "description": "Mobile games",
+        "type": "expense"
+    },
+    {
+        "date": "2024-11-07",
+        "amount": -90,
+        "category": "videogames",
+        "description": "VR games",
+        "type": "expense"
+    },
+    {
+        "date": "2024-11-08",
+        "amount": -100,
+        "category": "videogames",
+        "description": "Retro games",
+        "type": "expense"
+    },
+    {
+        "date": "2024-11-09",
+        "amount": -110,
+        "category": "videogames",
+        "description": "Board games",
+        "type": "expense"
+    },
+    {
+        "date": "2024-11-10",
+        "amount": -120,
+        "category": "videogames",
+        "description": "Game accessories",
+        "type": "expense"
+    },
+    {
+        "date": "2024-12-01",
+        "amount": 3000,
+        "category": "salary",
+        "description": "Bi-weekly salary",
+        "type": "income"
+    },
+    {
+        "date": "2024-12-02",
+        "amount": 1300,
+        "category": "rent",
+        "description": "Monthly rent",
+        "type": "income"
+    },
+    {
+        "date": "2024-12-05",
+        "amount": 132,
+        "category": "groceries",
+        "description": "Safeway",
+        "type": "income"
+    },
+    {
+        "date": "2024-12-08",
+        "amount": 105,
+        "category": "utilities",
+        "description": "Water bill",
+        "type": "income"
+    },
+    {
+        "date": "2024-12-11",
+        "amount": 210,
+        "category": "shopping",
+        "description": "Holiday gifts",
+        "type": "income"
+    },
+    {
+        "date": "2024-12-14",
+        "amount": 62,
+        "category": "transportation",
+        "description": "Gas station",
+        "type": "income"
+    },
+    {
+        "date": "2024-12-16",
+        "amount": 3000,
+        "category": "salary",
+        "description": "Bi-weekly salary",
+        "type": "income"
+    },
+    {
+        "date": "2024-12-19",
+        "amount": 125,
+        "category": "groceries",
+        "description": "Trader Joe's",
+        "type": "income"
+    },
+    {
+        "date": "2024-12-22",
+        "amount": 105,
+        "category": "dining",
+        "description": "Christmas dinner",
+        "type": "income"
+    },
+    {
+        "date": "2024-12-25",
+        "amount": 75,
+        "category": "entertainment",
+        "description": "Holiday party",
+        "type": "income"
+    },
+    {
+        "date": "2024-12-28",
+        "amount": 50,
+        "category": "transportation",
+        "description": "Taxi ride",
+        "type": "income"
     }
 ]

@@ -75,8 +75,28 @@ class MockDataService:
                 transactions = []
                 for tx_data in transactions_data:
                     try:
-                        # Convert date string to date object
-                        tx_date = datetime.strptime(tx_data["date"], "%Y-%m-%d").date()
+                        # Convert date string to date object - handle multiple formats
+                        date_str = tx_data["date"]
+                        tx_date = None
+                        
+                        # Try different date formats
+                        date_formats = [
+                            "%Y-%m-%d",    # 2024-01-01
+                            "%d-%m-%Y",    # 26-02-2024
+                            "%m/%d/%Y",    # 01/26/2024
+                            "%d/%m/%Y",    # 26/01/2024
+                            "%Y/%m/%d",    # 2024/01/26
+                        ]
+                        
+                        for fmt in date_formats:
+                            try:
+                                tx_date = datetime.strptime(date_str, fmt).date()
+                                break
+                            except ValueError:
+                                continue
+                        
+                        if tx_date is None:
+                            raise ValueError(f"Unable to parse date: {date_str}")
                         
                         # Handle amount based on type - expenses should be negative, income positive
                         amount_value = Decimal(str(tx_data["amount"]))
@@ -98,8 +118,9 @@ class MockDataService:
                             updated_at=datetime.now()
                         )
                         transactions.append(transaction)
-                    except (ValueError, KeyError) as e:
+                    except (ValueError, KeyError, TypeError, Exception) as e:
                         print(f"Error processing transaction for {user.id}: {e}")
+                        print(f"  Transaction data: {tx_data}")
                         continue
                 
                 self._transactions_cache[user.id] = transactions
