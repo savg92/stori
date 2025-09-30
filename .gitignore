@@ -158,7 +158,7 @@ tmp/
 temp/
 
 # Docker
-.dockerignore
+# .dockerignore
 
 # Database
 *.db
