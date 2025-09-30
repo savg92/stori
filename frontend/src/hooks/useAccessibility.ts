@@ -3,7 +3,10 @@ import { useEffect, useRef } from 'react';
 /**
  * Hook for managing modal/dialog focus
  */
-export function useModalFocus(isOpen: boolean, containerRef: React.RefObject<HTMLElement | null>) {
+export function useModalFocus(
+	isOpen: boolean,
+	containerRef: React.RefObject<HTMLElement | null>
+) {
 	useEffect(() => {
 		if (isOpen && containerRef.current) {
 			const container = containerRef.current;
@@ -11,7 +14,9 @@ export function useModalFocus(isOpen: boolean, containerRef: React.RefObject<HTM
 				'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
 			);
 			const firstElement = focusableElements[0] as HTMLElement;
-			const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+			const lastElement = focusableElements[
+				focusableElements.length - 1
+			] as HTMLElement;
 
 			const handleKeyDown = (e: KeyboardEvent) => {
 				if (e.key === 'Tab') {
@@ -30,7 +35,7 @@ export function useModalFocus(isOpen: boolean, containerRef: React.RefObject<HTM
 			};
 
 			container.addEventListener('keydown', handleKeyDown);
-			
+
 			// Focus first element
 			if (firstElement) {
 				setTimeout(() => firstElement.focus(), 100);
@@ -49,11 +54,14 @@ export function useModalFocus(isOpen: boolean, containerRef: React.RefObject<HTM
 export function useScreenReader() {
 	const announceRef = useRef<HTMLDivElement>(null);
 
-	const announce = (message: string, priority: 'polite' | 'assertive' = 'polite') => {
+	const announce = (
+		message: string,
+		priority: 'polite' | 'assertive' = 'polite'
+	) => {
 		if (announceRef.current) {
 			announceRef.current.setAttribute('aria-live', priority);
 			announceRef.current.textContent = message;
-			
+
 			// Clear after announcement to avoid repetition
 			setTimeout(() => {
 				if (announceRef.current) {
@@ -79,7 +87,10 @@ export function useKeyboardNavigation(
 		switch (e.key) {
 			case 'ArrowDown':
 				e.preventDefault();
-				currentIndex.current = Math.min(currentIndex.current + 1, itemCount - 1);
+				currentIndex.current = Math.min(
+					currentIndex.current + 1,
+					itemCount - 1
+				);
 				break;
 			case 'ArrowUp':
 				e.preventDefault();
@@ -115,7 +126,9 @@ export function useFocusTrap() {
 			'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
 		);
 		const firstElement = focusableElements[0] as HTMLElement;
-		const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+		const lastElement = focusableElements[
+			focusableElements.length - 1
+		] as HTMLElement;
 
 		const handleKeyDown = (e: KeyboardEvent) => {
 			if (e.key === 'Tab') {
