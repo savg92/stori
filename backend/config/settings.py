@@ -42,11 +42,6 @@ class Settings:
             self.supabase_key = os.getenv("SUPABASE_PUBLISHABLE_KEY") or os.getenv("SUPABASE_ANON_KEY")  # Support both naming conventions
             self.supabase_service_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
         
-        # JWT settings for authentication
-        self.jwt_secret = os.getenv("JWT_SECRET_KEY")
-        self.jwt_algorithm = os.getenv("JWT_ALGORITHM", "HS256")
-        self.jwt_expire_minutes = int(os.getenv("JWT_EXPIRE_MINUTES", "30"))
-        
         # Supabase JWT secret for token verification
         # Local development uses a standard JWT secret
         if self.use_local_supabase:
@@ -196,18 +191,27 @@ class Settings:
         if self.llm_provider == 'openai':
             data['model'] = 'gpt-*'
         elif self.llm_provider == 'ollama':
-            data['ollama_llm_model'] = self.ollama_llm_model
-            data['ollama_base_url'] = self.ollama_base_url
+            if self.ollama_llm_model:
+                data['ollama_llm_model'] = self.ollama_llm_model
+            if self.ollama_base_url:
+                data['ollama_base_url'] = self.ollama_base_url
         elif self.llm_provider == 'azure':
-            data['azure_endpoint'] = self.azure_endpoint
-            data['azure_api_version'] = self.azure_api_version
-            data['azure_llm_deployment'] = self.azure_llm_deployment
+            if self.azure_endpoint:
+                data['azure_endpoint'] = self.azure_endpoint
+            if self.azure_api_version:
+                data['azure_api_version'] = self.azure_api_version
+            if self.azure_llm_deployment:
+                data['azure_llm_deployment'] = self.azure_llm_deployment
         elif self.llm_provider == 'bedrock':
-            data['bedrock_model_id'] = self.bedrock_model_id
-            data['aws_region'] = self.aws_region
+            if self.bedrock_model_id:
+                data['bedrock_model_id'] = self.bedrock_model_id
+            if self.aws_region:
+                data['aws_region'] = self.aws_region
         elif self.llm_provider == 'lmstudio':
-            data['lm_studio_model'] = self.lm_studio_model
-            data['lm_studio_base_url'] = self.lm_studio_base_url
+            if self.lm_studio_model:
+                data['lm_studio_model'] = self.lm_studio_model
+            if self.lm_studio_base_url:
+                data['lm_studio_base_url'] = self.lm_studio_base_url
         elif self.llm_provider == 'openrouter':
             data['openrouter_model'] = self.openrouter_model
         return data
@@ -273,24 +277,33 @@ class Settings:
         if self.embedding_provider == 'openai':
             data['model'] = 'text-embedding-ada-002'
         elif self.embedding_provider == 'ollama':
-            data['model'] = self.ollama_embedding_model
-            data['base_url'] = self.ollama_base_url
+            if self.ollama_embedding_model:
+                data['model'] = self.ollama_embedding_model
+            if self.ollama_base_url:
+                data['base_url'] = self.ollama_base_url
         elif self.embedding_provider == 'azure':
-            data['deployment'] = self.azure_embedding_deployment
-            data['endpoint'] = self.azure_endpoint
+            if self.azure_embedding_deployment:
+                data['deployment'] = self.azure_embedding_deployment
+            if self.azure_endpoint:
+                data['endpoint'] = self.azure_endpoint
         elif self.embedding_provider == 'bedrock':
-            data['model_id'] = self.bedrock_embedding_model_id
-            data['region'] = self.aws_region
+            if self.bedrock_embedding_model_id:
+                data['model_id'] = self.bedrock_embedding_model_id
+            if self.aws_region:
+                data['region'] = self.aws_region
         elif self.embedding_provider == 'lmstudio':
-            data['model'] = self.lm_studio_embedding_model
-            data['base_url'] = self.lm_studio_base_url
+            if self.lm_studio_embedding_model:
+                data['model'] = self.lm_studio_embedding_model
+            if self.lm_studio_base_url:
+                data['base_url'] = self.lm_studio_base_url
         elif self.embedding_provider == 'openrouter':
-            data['model'] = self.openrouter_embedding_model
+            if self.openrouter_embedding_model:
+                data['model'] = self.openrouter_embedding_model
         else:
             data['model'] = 'all-MiniLM-L6-v2'
         return data
     
-    def _get_float_env(self, key: str, default: float, min_val: float = None, max_val: float = None) -> float:
+    def _get_float_env(self, key: str, default: float, min_val: Optional[float] = None, max_val: Optional[float] = None) -> float:
         """Get float environment variable with validation."""
         try:
             value = float(os.getenv(key, str(default)))
@@ -302,7 +315,7 @@ class Settings:
         except (ValueError, TypeError):
             return default
     
-    def _get_int_env(self, key: str, default: int, min_val: int = None, max_val: int = None) -> int:
+    def _get_int_env(self, key: str, default: int, min_val: Optional[int] = None, max_val: Optional[int] = None) -> int:
         """Get integer environment variable with validation."""
         try:
             value = int(os.getenv(key, str(default)))

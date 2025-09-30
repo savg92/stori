@@ -107,8 +107,19 @@ backend/
 ├── core/          # Data models and types
 ├── services/      # Business logic and integrations
 ├── providers/     # AI provider implementations
+├── scripts/       # Utility scripts (see scripts/README.md)
 └── config/        # Configuration and settings
 ```
+
+## Utility Scripts
+
+The `scripts/` directory contains organized utility scripts for:
+
+- **Database Management**: Setup, analysis, and maintenance scripts
+- **Authentication**: User creation and email management utilities
+- **Testing**: Edge case testing and validation scripts
+
+See `scripts/README.md` for detailed documentation and usage instructions.
 
 ## Development
 

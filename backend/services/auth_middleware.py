@@ -1,4 +1,9 @@
-"""Authentication middleware for Supabase JWT tokens."""
+"""Authentication middleware for S        try:
+            # Set the token for the client and get user
+            response = self._supabase.auth.get_user(token)
+            
+            if not response or not response.user:
+                raise AuthenticationError("Invalid token")e JWT tokens."""
 
 import logging
 from typing import Optional, Dict, Any
@@ -25,9 +30,14 @@ class AuthMiddleware:
     def __init__(self):
         """Initialize auth middleware."""
         self._settings = get_settings()
+        
+        # Validate required settings
+        if not self._settings.supabase_url or not self._settings.supabase_key:
+            raise ValueError("Supabase URL and key are required")
+            
         self._supabase = create_client(
-            self._settings.supabase_url,
-            self._settings.supabase_key
+            str(self._settings.supabase_url),
+            str(self._settings.supabase_key)
         )
     
     async def verify_token(self, token: str) -> Dict[str, Any]:
@@ -36,8 +46,10 @@ class AuthMiddleware:
             # Set the token for the client and get user
             response = self._supabase.auth.get_user(token)
             
-            if not response.user:
+            if not response or not response.user:
                 raise AuthenticationError("Invalid token")
+                
+            user = response.user  # Store user to satisfy type checker
             
             # Map authenticated user emails to mock data user IDs
             email_to_user_id = {
@@ -49,17 +61,17 @@ class AuthMiddleware:
             }
             
             # Use mock data user ID if email matches, otherwise use real user ID
-            user_email = response.user.email or ""
-            mapped_user_id = email_to_user_id.get(user_email, response.user.id)
+            user_email = user.email or ""
+            mapped_user_id = email_to_user_id.get(user_email, user.id)
             
             logger.info(f"🔄 User email: {user_email}")
             logger.info(f"🔄 Mapped user ID: {mapped_user_id}")
             
             return {
                 "user_id": mapped_user_id,
-                "email": response.user.email,
-                "user_metadata": response.user.user_metadata or {},
-                "app_metadata": response.user.app_metadata or {}
+                "email": user.email,
+                "user_metadata": user.user_metadata or {},
+                "app_metadata": user.app_metadata or {}
             }
             
         except Exception as e:
