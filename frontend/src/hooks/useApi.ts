@@ -147,7 +147,9 @@ export const useDeleteTransaction = () => {
 };
 
 // Expense hooks
-export const useExpenseSummary = (startDate?: string, endDate?: string) => {
+export const useExpenseSummary = (startDate?: string, endDate?: string, enabled: boolean = true) => {
+	const isEnabled = enabled && (startDate !== undefined || endDate !== undefined);
+	
 	return useQuery({
 		queryKey: queryKeys.expenses.summary({ start: startDate, end: endDate }),
 		queryFn: () =>
@@ -155,8 +157,12 @@ export const useExpenseSummary = (startDate?: string, endDate?: string) => {
 				startDate,
 				endDate,
 			}),
-		staleTime: 5 * 60 * 1000,
+		enabled: isEnabled,
+		staleTime: 2 * 60 * 1000, // Reduce stale time for more frequent updates
 		refetchOnWindowFocus: false,
+		refetchOnMount: true, // Always refetch when component mounts
+		// Force refetch when enabled changes from false to true
+		refetchOnReconnect: true,
 	});
 };
 
@@ -180,13 +186,16 @@ export const useExpenseCategories = () => {
 export const useTimelineData = (
 	startDate?: string,
 	endDate?: string,
-	granularity: 'daily' | 'weekly' | 'monthly' = 'monthly'
+	granularity: 'daily' | 'weekly' | 'monthly' = 'monthly',
+	enabled: boolean = true
 ) => {
 	return useQuery({
 		queryKey: queryKeys.timeline.data({ startDate, endDate, granularity }),
 		queryFn: () => api.timeline.data(startDate, endDate, granularity),
-		staleTime: 5 * 60 * 1000,
+		enabled: enabled && (startDate !== undefined || endDate !== undefined), // Only enabled when we have dates
+		staleTime: 2 * 60 * 1000, // Reduce stale time for more frequent updates
 		refetchOnWindowFocus: false,
+		refetchOnMount: true, // Always refetch when component mounts
 	});
 };
 

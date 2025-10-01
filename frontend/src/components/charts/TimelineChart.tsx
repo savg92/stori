@@ -130,11 +130,13 @@ export function TimelineChart({
 	startDate?: string;
 	endDate?: string;
 } = {}) {
+	// Only fetch timeline data when we have valid dates
+	const hasValidDates = Boolean(startDate || endDate);
 	const {
 		data: timelineData,
 		isLoading,
 		error,
-	} = useTimelineData(startDate, endDate);
+	} = useTimelineData(startDate, endDate, 'monthly', hasValidDates);
 	const [selectedDataPoint, setSelectedDataPoint] =
 		useState<ChartDataPoint | null>(null);
 	const [focusedLine, setFocusedLine] = useState<string | null>(null);

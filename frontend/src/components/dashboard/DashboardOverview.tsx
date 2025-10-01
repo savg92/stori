@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { TrendingUp, TrendingDown, DollarSign, CreditCard } from 'lucide-react';
 import { ExpenseChart } from '@/components/charts/ExpenseChart';
@@ -6,6 +6,8 @@ import { TimelineChart } from '@/components/charts/TimelineChart';
 import { RecentTransactions } from './RecentTransactions';
 import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { useExpenseSummary } from '@/hooks/useApi';
+import { useDashboardDataRefresh } from '@/hooks/useDashboardRefresh';
+import { useSmartDateRange } from '@/hooks/useSmartDateRange';
 
 interface StatCardProps {
 	title: string;
@@ -59,21 +61,49 @@ function StatCard({
 }
 
 export function DashboardOverview() {
-	// Date filtering state
+	// Smart date range detection based on available data
+	const { optimalRange, isLoading: isDateRangeLoading } = useSmartDateRange();
+
+	// Date filtering state - initialized with smart detection
 	const [dateRange, setDateRange] = useState<{
 		startDate?: string;
 		endDate?: string;
 		label: string;
 	}>({
-		label: 'All 2024 data',
+		startDate: undefined,
+		endDate: undefined,
+		label: 'Analyzing data...',
 	});
+
+	// Update date range when smart detection completes
+	useEffect(() => {
+		if (!isDateRangeLoading && optimalRange) {
+			setDateRange({
+				startDate: optimalRange.startDate,
+				endDate: optimalRange.endDate,
+				label: `${optimalRange.label} (${optimalRange.transactionCount} transactions)`,
+			});
+		}
+	}, [isDateRangeLoading, optimalRange]); // Ensure fresh data when navigating to dashboard
+	useDashboardDataRefresh();
+
+	// Only fetch summary data when we have valid dates from smart detection
+	const hasValidDates =
+		!isDateRangeLoading && Boolean(dateRange.startDate || dateRange.endDate);
+
+	// Debug logging
+	//   console.log('💰 Expense Summary Query:', {
+	//     startDate: dateRange.startDate,
+	//     endDate: dateRange.endDate,
+	//     hasValidDates,
+	//     isDateRangeLoading
+	//   });
 
 	const { data: summaryData } = useExpenseSummary(
 		dateRange.startDate,
-		dateRange.endDate
-	);
-
-	// Handle date range changes from DateRangePicker
+		dateRange.endDate,
+		hasValidDates
+	); // Handle date range changes from DateRangePicker
 	const handleRangeChange = (range: {
 		start: string;
 		end: string;
@@ -161,7 +191,18 @@ export function DashboardOverview() {
 						Welcome back! Here's an overview of your financial activity.
 					</p>
 				</div>
-				<DateRangePicker onRangeChange={handleRangeChange} />
+				<DateRangePicker
+					onRangeChange={handleRangeChange}
+					defaultRange={
+						dateRange.startDate && dateRange.endDate
+							? {
+									start: dateRange.startDate,
+									end: dateRange.endDate,
+									label: dateRange.label,
+							  }
+							: undefined
+					}
+				/>
 			</div>
 
 			<div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4'>

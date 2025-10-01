@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from './button';
 import { Calendar, ChevronDown } from 'lucide-react';
 import {
@@ -62,6 +62,13 @@ export function DateRangePicker({
 	const [selectedRange, setSelectedRange] = useState<DateRange>(
 		defaultRange || presetRanges[4] // Default to "All 2024 data"
 	);
+
+	// Update selected range when defaultRange prop changes (e.g., from smart detection)
+	useEffect(() => {
+		if (defaultRange) {
+			setSelectedRange(defaultRange);
+		}
+	}, [defaultRange]);
 
 	const handleRangeSelect = (range: DateRange) => {
 		setSelectedRange(range);

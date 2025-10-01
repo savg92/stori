@@ -10,8 +10,8 @@ export const queryClient = new QueryClient({
 			gcTime: 10 * 60 * 1000, // 10 minutes (was cacheTime)
 			// Don't refetch on window focus for better UX
 			refetchOnWindowFocus: false,
-			// Don't refetch on mount if data is fresh
-			refetchOnMount: false,
+			// Refetch on mount if data is stale
+			refetchOnMount: true,
 			// Retry failed requests with exponential backoff
 			retry: (failureCount, error: unknown) => {
 				// Don't retry 4xx errors (client errors)

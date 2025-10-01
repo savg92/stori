@@ -110,11 +110,13 @@ export function ExpenseChart({
 	startDate?: string;
 	endDate?: string;
 } = {}) {
+	// Only fetch expense data when we have valid dates
+	const hasValidDates = Boolean(startDate || endDate);
 	const {
 		data: expenseData,
 		isLoading,
 		error,
-	} = useExpenseSummary(startDate, endDate);
+	} = useExpenseSummary(startDate, endDate, hasValidDates);
 	const [activeIndex, setActiveIndex] = useState<number | null>(null);
 	const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
