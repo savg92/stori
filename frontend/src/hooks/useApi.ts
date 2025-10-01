@@ -147,9 +147,14 @@ export const useDeleteTransaction = () => {
 };
 
 // Expense hooks
-export const useExpenseSummary = (startDate?: string, endDate?: string, enabled: boolean = true) => {
-	const isEnabled = enabled && (startDate !== undefined || endDate !== undefined);
-	
+export const useExpenseSummary = (
+	startDate?: string,
+	endDate?: string,
+	enabled: boolean = true
+) => {
+	const isEnabled =
+		enabled && (startDate !== undefined || endDate !== undefined);
+
 	return useQuery({
 		queryKey: queryKeys.expenses.summary({ start: startDate, end: endDate }),
 		queryFn: () =>

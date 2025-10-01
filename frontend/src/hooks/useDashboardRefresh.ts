@@ -18,7 +18,7 @@ export function useDashboardDataRefresh() {
 				queryKey: queryKeys.expenses.all,
 				exact: false, // This will invalidate all expense-related queries
 			});
-			
+
 			queryClient.invalidateQueries({
 				queryKey: queryKeys.timeline.all,
 				exact: false, // This will invalidate all timeline-related queries
@@ -45,7 +45,7 @@ export function useEnsureFreshData() {
 			queryKey: queryKeys.expenses.all,
 			exact: false,
 		});
-		
+
 		queryClient.refetchQueries({
 			queryKey: queryKeys.timeline.all,
 			exact: false,
